@@ -1,7 +1,8 @@
 """View for Slide game"""
 # import slideexeceptions
-from tkinter import Tk, Frame, Canvas, NW
+from tkinter import Tk, Frame, Canvas
 from PIL import Image, ImageTk
+from math import log
 
 
 COLORS = ((2, 63, 165), (125, 135, 185), (190, 193, 212), (214, 188, 192), (187, 119, 132),
@@ -21,7 +22,7 @@ class View(Frame):
         Frame.__init__(self, parent)
 
         parent.title('SLIDE')
-        self.board = Board(parent, 4)
+        self._board = Board(parent, 4)
         self.pack()
 
 
@@ -32,11 +33,11 @@ class Board(Canvas):
 
     def __init__(self, parent, size):
         """
-        Purpose:
-          Creates the window and initial boardview
-        Arguments:
-          Parent (Tk): something to make Tkinter work
-          Size (int): number of blocks in a row/column of the grid
+          Purpose:
+            Creates the window and initial boardview
+          Arguments:
+            Parent (Tk): something to make Tkinter work
+            Size (int): number of blocks in a row/column of the grid
         """
         #The window is sized to fit each 50px block plus a 10px buffer between blocks
         #and a 10px border around them
@@ -49,11 +50,11 @@ class Board(Canvas):
 
     def init_board(self, size, span):
         """
-        Purpose:
-          Creates the board graphic of all blank grid squares
-        Arguments:
-          Size (int): number of blocks in a row/column of the board
-          Span (int): length/height in pixels of the board
+          Purpose:
+            Creates the board graphic of all blank grid squares
+          Arguments:
+            Size (int): number of blocks in a row/column of the board
+            Span (int): length/height in pixels of the board
         """
         self.create_rectangle(BOARD_BORDER, BOARD_BORDER,
                               span - BOARD_BORDER, span - BOARD_BORDER,
@@ -64,21 +65,37 @@ class Board(Canvas):
             for j in range(size):
                 x = self.to_pix(i)
                 y = self.to_pix(j)
-                centering_adjustment = int(BLOCK_BORDER)
-                self.create_image(x, y,
-                                  image=self.block, anchor=NW, tag="0")
+                self.create_image(x, y, image=self.block, tag="0")
+        self.draw_block(1, 1, 2)
 
     def to_pix(self, val):
         """
-        Purpose:
-          To translate a axis coordinate to its pixel on the actual window
-          Coordinates are taken from the top left corner of the grid square
-        Arguments:
-          Val - a number representing the "grid" coord to be translated
-        Returns:
-          Pixel location of that coord on either axis
+          Purpose:
+            To translate a axis coordinate to its pixel on the actual window
+            Coordinates are taken from the top left corner of the grid square
+          Arguments:
+            Val - a number representing the "grid" coord to be translated
+          Returns:
+            Pixel location of that coord on either axis
         """
-        return BOARD_BORDER + val * GRID_SQ_SIZE + BLOCK_BORDER
+        return BOARD_BORDER + val * GRID_SQ_SIZE + (BLOCK_BORDER + GRID_SQ_SIZE) / 2
+
+    def draw_block(self, x, y, val):
+        """
+          Purpose:
+            Adds a block to the board at the grid coordinates of x, y of value val
+          Arguments:
+            x (int): Grid coordinate on the x axis of the block on board
+            y (int): Grid coordinate on the y axis of the block on board
+            val (int): Value of the block being added
+        """
+        x = self.to_pix(x)
+        y = self.to_pix(y)
+        color = COLORS[int(log(val, 2))]
+        block = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), color)
+        self.blockkk = ImageTk.PhotoImage(block)
+        self.create_image(x, y, image=self.blockkk, tag=str(val))
+        self.create_text(x, y, text=str(val), fill="#FFF")
 
 
 def main():
