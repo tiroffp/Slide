@@ -18,10 +18,9 @@ BLOCK_BORDER = GRID_SQ_SIZE - BLOCK_SIZE
 
 class View(Frame):
 
-    def __init__(self, parent):
+    def __init__(self, parent, size):
         Frame.__init__(self, parent)
-
-        parent.title('SLIDE')
+        # parent.title('SLIDE')
         self._board = Board(parent, 4)
         self.pack()
 
@@ -66,7 +65,6 @@ class Board(Canvas):
                 x = self.to_pix(i)
                 y = self.to_pix(j)
                 self.create_image(x, y, image=self.block, tag="0")
-        self.draw_block(1, 1, 2)
 
     def to_pix(self, val):
         """
