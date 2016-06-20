@@ -48,10 +48,10 @@ class Board(Canvas):
         self.parent = parent  # parent of this Frame
         self.valblock = ImageTk.PhotoImage(Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), (2, 63, 165)))
         self.build_blocklist()
-        self.init_board(size, span)
+        self.build_board(size, span)
         self.pack()
 
-    def init_board(self, size, span):
+    def build_board(self, size, span):
         """
           Purpose:
             Creates the board graphic of all blank grid squares
@@ -64,11 +64,12 @@ class Board(Canvas):
                               fill="#AAA")
         block = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), "#FFF")
         self.block = ImageTk.PhotoImage(block)
-        # for i in range(size):
-        #     for j in range(size):
-        #         x = self.to_pix(i)
-        #         y = self.to_pix(j)
-        #         self.create_image(x, y, image=self.block, tag="0")
+        for x in range(size):
+            for y in range(size):
+                coord = str(x) + "," + str(y)
+                print(str(coord))
+                self.create_image(self.to_pix(x), self.to_pix(y), image=self.block, tag=str(coord))
+        self.testblock = self.create_image(0, 0, image=self.blocklist[-1], tag="getit")
 
     def build_blocklist(self):
         """
@@ -89,9 +90,9 @@ class Board(Canvas):
           Arguments:
             Val - a number representing the "grid" coord to be translated
           Returns:
-            Pixel location of that coord on either axis
+            int - Pixel location of that coord on either axis
         """
-        return BOARD_BORDER + val * GRID_SQ_SIZE + (BLOCK_BORDER + GRID_SQ_SIZE) / 2
+        return int(BOARD_BORDER + val * GRID_SQ_SIZE + (BLOCK_BORDER + GRID_SQ_SIZE) / 2)
 
     def draw_block(self, x, y, val):
         """
@@ -102,6 +103,10 @@ class Board(Canvas):
             y (int): Grid coordinate on the y axis of the block on board
             val (int): Value of the block being added
         """
+        coord = (x, y)
+        tag = str(coord)
+        print(tag)
+        block = self.find_withtag(tag)
         x = self.to_pix(x)
         y = self.to_pix(y)
         if val:
@@ -111,7 +116,10 @@ class Board(Canvas):
             color = self.blocklist[int(log(val, 2) + 1)]
         else:
             color = self.blocklist[0]
-        self.create_image(x, y, image=color, tag=str(val))
+        print(str(color))
+        print(str(block))
+        print(str(self.itemcget(block, "image")))
+        self.itemconfigure(block, image=color)
         self.create_text(x, y, text=str(val), fill="#FFF")
 
 

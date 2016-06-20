@@ -104,7 +104,6 @@ class controller(Frame):
         if key == "Right":
             self.model.shift_blocks_right()
         x, y = self.model.add_new_block()
-        print(self.model._grid)
         self.view.draw_block(x, y, 2)
         for x in range(self.size):
             for y in range(self.size):
