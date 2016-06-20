@@ -240,17 +240,17 @@ class Complex_Board_Tests(unittest.TestCase):
         self.assertEqual(self.no_shift.value_at(0, 1), 4)
         self.assertEqual(self.no_shift.value_at(1, 1), 2)
 
-    def test_shift_blocks_up(self):
+    def test_shift_blocks_down(self):
         """
-        Tests shift_blocks_up
+        Tests shift_blocks_down
         """
-        self.s_board.shift_blocks_up()
+        self.s_board.shift_blocks_down()
         self.assertEqual(self.s_board.value_at(0, 0), 0)
         self.assertEqual(self.s_board.value_at(0, 1), 4)
         self.assertEqual(self.s_board.value_at(1, 0), 0)
         self.assertEqual(self.s_board.value_at(1, 1), 4)
 
-        self.m_board.shift_blocks_up()
+        self.m_board.shift_blocks_down()
         self.assertEqual(self.m_board.value_at(0, 0), 0)
         self.assertEqual(self.m_board.value_at(0, 1), 4)
         self.assertEqual(self.m_board.value_at(0, 2), 2)
@@ -268,23 +268,23 @@ class Complex_Board_Tests(unittest.TestCase):
         self.assertEqual(self.m_board.value_at(3, 2), 2)
         self.assertEqual(self.m_board.value_at(3, 3), 4)
 
-        self.no_shift.shift_blocks_up()
+        self.no_shift.shift_blocks_down()
         self.assertEqual(self.no_shift.value_at(0, 0), 2)
         self.assertEqual(self.no_shift.value_at(1, 0), 4)
         self.assertEqual(self.no_shift.value_at(0, 1), 4)
         self.assertEqual(self.no_shift.value_at(1, 1), 2)
 
-    def test_shift_blocks_down(self):
+    def test_shift_blocks_up(self):
         """
-        Tests shift_blocks_down
+        Tests shift_blocks_up
         """
-        self.s_board.shift_blocks_down()
+        self.s_board.shift_blocks_up()
         self.assertEqual(self.s_board.value_at(0, 0), 4)
         self.assertEqual(self.s_board.value_at(0, 1), 0)
         self.assertEqual(self.s_board.value_at(1, 0), 4)
         self.assertEqual(self.s_board.value_at(1, 1), 0)
 
-        self.m_board.shift_blocks_down()
+        self.m_board.shift_blocks_up()
         self.assertEqual(self.m_board.value_at(0, 0), 4)
         self.assertEqual(self.m_board.value_at(0, 1), 4)
         self.assertEqual(self.m_board.value_at(0, 2), 2)
@@ -302,7 +302,7 @@ class Complex_Board_Tests(unittest.TestCase):
         self.assertEqual(self.m_board.value_at(3, 2), 0)
         self.assertEqual(self.m_board.value_at(3, 3), 0)
 
-        self.no_shift.shift_blocks_down()
+        self.no_shift.shift_blocks_up()
         self.assertEqual(self.no_shift.value_at(0, 0), 2)
         self.assertEqual(self.no_shift.value_at(1, 0), 4)
         self.assertEqual(self.no_shift.value_at(0, 1), 4)

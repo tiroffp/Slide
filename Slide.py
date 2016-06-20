@@ -73,13 +73,16 @@ class controller(Frame):
         """
         Frame.__init__(self, parent)
         parent.title('Slide')
+        self.size = 4
         self.model = Model(4)
         self.view = View(self, 4)
+        self.one = 0
+        self.two = 0
         self.valid_moves = {
             "Up": lambda: self.model.shift_blocks_up(),
-            "Down": lambda: self.model.shift_blocks_down,
-            "Left": lambda: self.model.shift_blocks_left,
-            "Right": lambda: self.model.shift_blocks_right
+            "Down": lambda: self.model.shift_blocks_down(),
+            "Left": lambda: self.model.shift_blocks_left(),
+            "Right": lambda: self.model.shift_blocks_right()
             }
         self.bind_all("<Key>", self.move)
 
@@ -88,8 +91,25 @@ class controller(Frame):
         Expects a user move - as defined by the dictionary valid_moves
         Returns None if the game is not over, otherwise a string"""
         key = user_move.keysym
-        self.valid_moves[key]()
-        print("ok")
+        # self.valid_moves[key]
+        if key == "Up":
+            self.model.shift_blocks_up()
+            # self.view.draw_block(self.one, self.two, 2)
+            # self.one += 0
+            # self.two += 1
+        if key == "Down":
+            self.model.shift_blocks_down()
+        if key == "Left":
+            self.model.shift_blocks_left()
+        if key == "Right":
+            self.model.shift_blocks_right()
+        x, y = self.model.add_new_block()
+        print(self.model._grid)
+        self.view.draw_block(x, y, 2)
+        for x in range(self.size):
+            for y in range(self.size):
+                val = self.model.value_at(x, y)
+                self.view.draw_block(x, y, val)
         if self.model.game_state_check():
             print(self.model.game_state_check())
 

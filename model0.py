@@ -52,11 +52,13 @@ class Model:
     def add_new_block(self):
         """
         Adds a new block to a random non-occupied (value of zero) square on the board
+        Returns the coordinates of the addition as a tuple
         """
         if len(self._unoccupied_squares) == 0:
             raise slideexceptions.AddBlockError("GameBoard is Full")
         new_x, new_y = self._unoccupied_squares.pop(int(random.random() * len(self._unoccupied_squares)))
         self._grid[new_x][new_y] = self._new_block_value
+        return (new_x, new_y)
 
     def value_at(self, x, y):
         """Gets the value of the grid at the coordinate (x,y) on the board."""
@@ -91,13 +93,13 @@ class Model:
         """
         Shifts all blocks up and collapses same-valued blocks
         """
-        self._shift_blocks(0, 0)
+        self._shift_blocks(0, 1)
 
     def shift_blocks_down(self):
         """
         Shifts all blocks down and collapses same-valued blocks
         """
-        self._shift_blocks(0, 1)
+        self._shift_blocks(0, 0)
 
     def _shift_blocks(self, shift_horizontal, shift_to_bottom_left):
         """
@@ -163,13 +165,15 @@ class Model:
         (wall or block of different value)
         """
         if shift_horizontal:
-            x_coord_new_slide = last_open
-            y_coord_new_slide = y_coord_old
+            x_coord_new = last_open
+            y_coord_new = y_coord_old
         else:
-            x_coord_new_slide = x_coord_old
-            y_coord_new_slide = last_open
+            x_coord_new = x_coord_old
+            y_coord_new = last_open
         self._grid[x_coord_old][y_coord_old] = 0
-        self._grid[x_coord_new_slide][y_coord_new_slide] = new_val
+        self._grid[x_coord_new][y_coord_new] = new_val
+        self._unoccupied_squares.append((x_coord_old, y_coord_old))
+        self._unoccupied_squares.remove((x_coord_new, y_coord_new))
 
     def game_state_check(self):
         """

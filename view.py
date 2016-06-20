@@ -1,11 +1,11 @@
 """View for Slide game"""
 # import slideexeceptions
-from tkinter import Tk, Frame, Canvas
+from tkinter import Frame, Canvas
 from PIL import Image, ImageTk
 from math import log
 
 
-COLORS = ((2, 63, 165), (125, 135, 185), (190, 193, 212), (214, 188, 192), (187, 119, 132),
+COLORS = ((265, 265, 265), (265, 63, 165), (125, 135, 185), (190, 193, 212), (214, 188, 192), (187, 119, 132),
           (142, 6, 59), (74, 111, 227), (133, 149, 225), (181, 187, 227), (230, 175, 185),
           (224, 123, 145), (211, 63, 106), (17, 198, 56), (141, 213, 147), (198, 222, 199),
           (234, 211, 198), (240, 185, 141), (239, 151, 8), (15, 207, 192), (156, 222, 214),
@@ -20,9 +20,11 @@ class View(Frame):
 
     def __init__(self, parent, size):
         Frame.__init__(self, parent)
-        # parent.title('SLIDE')
         self._board = Board(parent, 4)
         self.pack()
+
+    def draw_block(self, x, y, val):
+        self._board.draw_block(x, y, val)
 
 
 class Board(Canvas):
@@ -44,6 +46,8 @@ class Board(Canvas):
         Canvas.__init__(self, width=span, height=span, background="#555",
                         highlightthickness=0)
         self.parent = parent  # parent of this Frame
+        self.valblock = ImageTk.PhotoImage(Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), (2, 63, 165)))
+        self.build_blocklist()
         self.init_board(size, span)
         self.pack()
 
@@ -60,11 +64,22 @@ class Board(Canvas):
                               fill="#AAA")
         block = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), "#FFF")
         self.block = ImageTk.PhotoImage(block)
-        for i in range(size):
-            for j in range(size):
-                x = self.to_pix(i)
-                y = self.to_pix(j)
-                self.create_image(x, y, image=self.block, tag="0")
+        # for i in range(size):
+        #     for j in range(size):
+        #         x = self.to_pix(i)
+        #         y = self.to_pix(j)
+        #         self.create_image(x, y, image=self.block, tag="0")
+
+    def build_blocklist(self):
+        """
+        Takes the Colors global and builds a list of ImageTk objects to  use
+        when drawing blocks
+        """
+        self.blocklist = []
+        for color in COLORS:
+            image = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), color)
+            block_image = ImageTk.PhotoImage(image)
+            self.blocklist.append(block_image)
 
     def to_pix(self, val):
         """
@@ -89,20 +104,25 @@ class Board(Canvas):
         """
         x = self.to_pix(x)
         y = self.to_pix(y)
-        color = COLORS[int(log(val, 2))]
-        block = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), color)
-        self.blockkk = ImageTk.PhotoImage(block)
-        self.create_image(x, y, image=self.blockkk, tag=str(val))
+        if val:
+            # the plus one is because I found this list of colors on the internet
+            # and didn't organize them by colors, and the first one is a super jarring
+            # bright pink
+            color = self.blocklist[int(log(val, 2) + 1)]
+        else:
+            color = self.blocklist[0]
+        self.create_image(x, y, image=color, tag=str(val))
         self.create_text(x, y, text=str(val), fill="#FFF")
 
 
-def main():
+# Used only when testing view before it was ready to be called by the controller
+# def main():
 
-    root = Tk()
-    nib = View(root)
-    root.mainloop()
-    #Makes SublimeLinter stop warning me "nib is assigned but never used" >:(
-    root = nib
+#     root = Tk()
+#     nib = View(root)
+#     root.mainloop()
+#     #Makes SublimeLinter stop warning me "nib is assigned but never used" >:(
+#     root = nib
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
