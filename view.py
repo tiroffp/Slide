@@ -47,6 +47,7 @@ class Board(Canvas):
                         highlightthickness=0)
         self.parent = parent  # parent of this Frame
         self.valblock = ImageTk.PhotoImage(Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), (2, 63, 165)))
+        self.block_tags = {}
         self.build_blocklist()
         self.build_board(size, span)
         self.pack()
@@ -67,9 +68,13 @@ class Board(Canvas):
         for x in range(size):
             for y in range(size):
                 coord = str(x) + "," + str(y)
-                print(str(coord))
-                self.create_image(self.to_pix(x), self.to_pix(y), image=self.block, tag=str(coord))
-        self.testblock = self.create_image(0, 0, image=self.blocklist[-1], tag="getit")
+                print(coord)
+                coord_text = coord + "+"
+                ex = self.to_pix(x)
+                why = self.to_pix(y)
+                self.create_image(ex, why, image=self.block, tag=coord)
+                self.create_text(ex, why, text="", fill="#FFF", tag=coord_text)
+                print(coord_text)
 
     def build_blocklist(self):
         """
@@ -103,10 +108,11 @@ class Board(Canvas):
             y (int): Grid coordinate on the y axis of the block on board
             val (int): Value of the block being added
         """
-        coord = (x, y)
-        tag = str(coord)
-        print(tag)
-        block = self.find_withtag(tag)
+        coord = str(x) + "," + str(y)
+        coord_text = coord + "+"
+        print(coord_text)
+        block = self.find_withtag(coord)[0]
+        text = self.find_withtag(coord_text)[0]
         x = self.to_pix(x)
         y = self.to_pix(y)
         if val:
@@ -116,11 +122,8 @@ class Board(Canvas):
             color = self.blocklist[int(log(val, 2) + 1)]
         else:
             color = self.blocklist[0]
-        print(str(color))
-        print(str(block))
-        print(str(self.itemcget(block, "image")))
         self.itemconfigure(block, image=color)
-        self.create_text(x, y, text=str(val), fill="#FFF")
+        self.itemconfigure(text, text=str(val))
 
 
 # Used only when testing view before it was ready to be called by the controller
