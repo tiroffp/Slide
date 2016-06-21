@@ -68,13 +68,11 @@ class Board(Canvas):
         for x in range(size):
             for y in range(size):
                 coord = str(x) + "," + str(y)
-                print(coord)
                 coord_text = coord + "+"
                 ex = self.to_pix(x)
                 why = self.to_pix(y)
                 self.create_image(ex, why, image=self.block, tag=coord)
                 self.create_text(ex, why, text="", fill="#FFF", tag=coord_text)
-                print(coord_text)
 
     def build_blocklist(self):
         """
@@ -110,7 +108,6 @@ class Board(Canvas):
         """
         coord = str(x) + "," + str(y)
         coord_text = coord + "+"
-        print(coord_text)
         block = self.find_withtag(coord)[0]
         text = self.find_withtag(coord_text)[0]
         x = self.to_pix(x)

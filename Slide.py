@@ -76,8 +76,6 @@ class controller(Frame):
         self.size = 4
         self.model = Model(4)
         self.view = View(self, 4)
-        self.one = 0
-        self.two = 0
         self.valid_moves = {
             "Up": lambda: self.model.shift_blocks_up(),
             "Down": lambda: self.model.shift_blocks_down(),
@@ -94,9 +92,6 @@ class controller(Frame):
         # self.valid_moves[key]
         if key == "Up":
             self.model.shift_blocks_up()
-            # self.view.draw_block(self.one, self.two, 2)
-            # self.one += 0
-            # self.two += 1
         if key == "Down":
             self.model.shift_blocks_down()
         if key == "Left":
@@ -104,6 +99,7 @@ class controller(Frame):
         if key == "Right":
             self.model.shift_blocks_right()
         x, y = self.model.add_new_block()
+        self.one += 1
         self.view.draw_block(x, y, 2)
         for x in range(self.size):
             for y in range(self.size):
