@@ -20,6 +20,7 @@ class View(Frame):
 
     def __init__(self, parent, size):
         Frame.__init__(self, parent)
+        parent.title('Slide')
         self._board = Board(parent, 4)
         self.pack()
 
@@ -76,8 +77,8 @@ class Board(Canvas):
 
     def build_blocklist(self):
         """
-        Takes the Colors global and builds a list of ImageTk objects to  use
-        when drawing blocks
+            Takes the Colors global and builds a list of ImageTk objects to  use
+            when drawing blocks
         """
         self.blocklist = []
         for color in COLORS:

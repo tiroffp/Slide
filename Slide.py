@@ -2,7 +2,7 @@
 
 from model0 import Model
 from view import View
-from tkinter import Tk, Frame
+from tkinter import Tk
 title = """
 .----------------.  .----------------.  .----------------.  .----------------.  .----------------.
 | .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |
@@ -26,78 +26,54 @@ def launch():
     root.mainloop()
 
 
-def newgame():
-    """Handle creation of new game.
-    Returns a model object"""
-    print('Board size?')
-    while True:
-        try:
-            i = int(input())
-            print('Board will be ' + str(i) + ' by ' + str(i) + ' in size')
-            return Model(i)
-        except ValueError:
-            print("Give me digits, not letters!")
-
-
-def exit():
-    """exits the game
-    Returns none"""
-    print('bye')
-
-
-def gameLoop(cur_controller):
-    """Main game loop.
-    Returns a string"""
-    cur_controller
-    while True:
-        print("move?")
-        user_move = input()
-        result = cur_controller.move(user_move)
-        if result:
-            return result
-
-
-class controller(Frame):
-    """The controller classs.
-
-    Controller for modifying the state of the board with legal moves as per
-    the rules of the game.
+class controller():
     """
-    valid_moves = None
+        The controller classs.
 
-    def __init__(self, parent, size):
-        """Initialize the controller class instance.
+        Controller for modifying the state of the board with legal moves as per
+        the rules of the game.
+    """
 
-        model - the model being used for the game being played
-        view - the viewing apparendus used for the game being played
+    def __init__(self, root, size):
         """
-        Frame.__init__(self, parent)
-        parent.title('Slide')
-        self.size = 4
-        self.model = Model(4)
-        self.view = View(self, 4)
+            Initialize the controller class instance.
+
+            root - Tk object to handle view
+            size - size of board
+        """
+        self.size = size
+        self.model = Model(size)
+        self.view = View(root, size)
         self.valid_moves = {
             "Up": lambda: self.model.shift_blocks_up(),
             "Down": lambda: self.model.shift_blocks_down(),
             "Left": lambda: self.model.shift_blocks_left(),
             "Right": lambda: self.model.shift_blocks_right()
             }
-        self.bind_all("<Key>", self.move)
+        self.view.bind_all("<Key>", self.move)
+        self.render_board()
 
     def move(self, user_move):
-        """Execute one move.
-        Expects a user move - as defined by the dictionary valid_moves
-        Returns None if the game is not over, otherwise a string"""
+        """
+            Execute one move.
+            Expects a user move - as defined by the dictionary valid_moves
+            Returns a string when the game is over
+        """
         key = user_move.keysym
         self.valid_moves[key]()
         x, y = self.model.add_new_block()
-        self.view.draw_block(x, y, 2)
+        self.render_board()
+        if self.model.game_state_check():
+            print(self.model.game_state_check())
+
+    def render_board(self):
+        """
+        Instructs the view to draw the whole gameboard
+        """
         for x in range(self.size):
             for y in range(self.size):
                 val = self.model.value_at(x, y)
                 self.view.draw_block(x, y, val)
-        if self.model.game_state_check():
-            print(self.model.game_state_check())
 
 
 if __name__ == '__main__':
