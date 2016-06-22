@@ -89,15 +89,7 @@ class controller(Frame):
         Expects a user move - as defined by the dictionary valid_moves
         Returns None if the game is not over, otherwise a string"""
         key = user_move.keysym
-        # self.valid_moves[key]
-        if key == "Up":
-            self.model.shift_blocks_up()
-        if key == "Down":
-            self.model.shift_blocks_down()
-        if key == "Left":
-            self.model.shift_blocks_left()
-        if key == "Right":
-            self.model.shift_blocks_right()
+        self.valid_moves[key]()
         x, y = self.model.add_new_block()
         self.view.draw_block(x, y, 2)
         for x in range(self.size):
