@@ -2,6 +2,7 @@
 refers to the value at (x,y) on the grid displayed to the user."""
 import random
 import slideexceptions
+from Observable import Observable
 
 
 class Model:
@@ -24,6 +25,7 @@ class Model:
         self.size = int(num)
         self._unoccupied_squares = []
         l = []
+        # build the grid of empty squares, and add all to the list of unoccupied squares
         for i in range(num):
             m = []
             for j in range(num):
@@ -31,7 +33,8 @@ class Model:
                 self._unoccupied_squares.append(coordinate)
                 m.append(self._empty_square_value)
             l.append(m)
-        self._grid = l
+        # the grid is observable, so the controller can listen for changes
+        self._grid = Observable(l)
         self.add_new_block()
 
     def add_block_at(self, x, y, value):
@@ -40,29 +43,30 @@ class Model:
         Overwrites any value that is at the coordinate defined by (x,y)
         Does not check to see if coordinate is valid before adding
         """
-        self._grid[x][y] = value
+        grid = self._grid.get()
+        grid[x][y] = value
         if (x, y) in self._unoccupied_squares and value != self._empty_square_value:
             self._unoccupied_squares.remove((x, y))
         elif value == self._empty_square_value:
             self._unoccupied_squares.append((x, y))
-        # print(value)
-        # print((x,y))
-        # print(self._unoccupied_squares)
+        self._grid.set(grid)
 
     def add_new_block(self):
         """
         Adds a new block to a random non-occupied (value of zero) square on the board
         Returns the coordinates of the addition as a tuple
         """
+        grid = self._grid.get()
         if len(self._unoccupied_squares) == 0:
             raise slideexceptions.AddBlockError("GameBoard is Full")
         new_x, new_y = self._unoccupied_squares.pop(int(random.random() * len(self._unoccupied_squares)))
-        self._grid[new_x][new_y] = self._new_block_value
+        grid[new_x][new_y] = self._new_block_value
+        self._grid.set(grid)
         return (new_x, new_y)
 
     def value_at(self, x, y):
         """Gets the value of the grid at the coordinate (x,y) on the board."""
-        return self._grid[x][y]
+        return self._grid.get()[x][y]
 
     def count_blocks(self):
         """
@@ -131,7 +135,7 @@ class Model:
                 else:
                     x_coord_old = outer_iteration_value
                     y_coord_old = inner_iteration_value
-                val = self._grid[x_coord_old][y_coord_old]
+                val = self._grid.get()[x_coord_old][y_coord_old]
                 if val > self._empty_square_value and val == last_block_val:
                     last_block_val = val + val
                     self._block_merge(last_block_val, x_coord_old, y_coord_old, last_open,
@@ -148,15 +152,17 @@ class Model:
         Handles blocks of same value colliding with eachother and becoming a single block of twice
         their value
         """
+        grid = self._grid.get()
         if shift_horizontal:
             x_coord_new = last_open + directional_adjustment
             y_coord_new = y_coord_old
         else:
             x_coord_new = x_coord_old
             y_coord_new = last_open + directional_adjustment
-        self._grid[x_coord_new][y_coord_new] = new_val
-        self._grid[x_coord_old][y_coord_old] = self._empty_square_value
+        grid[x_coord_new][y_coord_new] = new_val
+        grid[x_coord_old][y_coord_old] = self._empty_square_value
         self._unoccupied_squares.append((x_coord_old, y_coord_old))
+        self._grid.set(grid)
 
     def _block_collide(self, new_val, x_coord_old, y_coord_old, last_open, shift_horizontal,
                        shift_to_bottom_left):
@@ -164,16 +170,18 @@ class Model:
         Handles blocks moving and colliding with their right-most obstacle
         (wall or block of different value)
         """
+        grid = self._grid.get()
         if shift_horizontal:
             x_coord_new = last_open
             y_coord_new = y_coord_old
         else:
             x_coord_new = x_coord_old
             y_coord_new = last_open
-        self._grid[x_coord_old][y_coord_old] = 0
-        self._grid[x_coord_new][y_coord_new] = new_val
+        grid[x_coord_old][y_coord_old] = 0
+        grid[x_coord_new][y_coord_new] = new_val
         self._unoccupied_squares.append((x_coord_old, y_coord_old))
         self._unoccupied_squares.remove((x_coord_new, y_coord_new))
+        self._grid.set(grid)
 
     def game_state_check(self):
         """
@@ -181,7 +189,7 @@ class Model:
         class dictionary
         """
         column_maxes = []
-        for column in self._grid:
+        for column in self._grid.get():
             column_maxes.append(max(column))
         board_max = max(column_maxes)
         if board_max == self.game_goal:
