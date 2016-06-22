@@ -1,4 +1,8 @@
 class Observable:
+    """
+    Contains data that can be subscribed to, and will run the callback functions
+    whenever said data is changed
+    """
     def __init__(self, initialValue=None):
         self.data = initialValue
         self.callbacks = {}
