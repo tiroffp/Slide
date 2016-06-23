@@ -1,6 +1,6 @@
 """View for Slide game"""
 # import slideexeceptions
-from tkinter import Frame, Canvas
+from tkinter import *
 from PIL import Image, ImageTk
 from math import log
 
@@ -19,21 +19,45 @@ BLOCK_BORDER = GRID_SQ_SIZE - BLOCK_SIZE
 class View(Frame):
 
     def __init__(self, parent, size):
+        """
+            Purpose:
+                Creates window for program
+            Arguments:
+                Parent (Tk): Tk object running the view
+                size (int): size of board
+        """
         Frame.__init__(self, parent)
+        span = size * GRID_SQ_SIZE + BOARD_BORDER * 2 + BLOCK_BORDER
+        parent.minsize(span, span)
         parent.title('Slide')
-        self._board = Board(parent, 4)
+        self.buttons = Buttons(self, span)
+        self.buttons.pack()
+        self.new_game_button = self.buttons.new_game_button
+        self._board = Board(parent, size, span)
         self.pack()
 
     def draw_block(self, x, y, val):
         self._board.draw_block(x, y, val)
 
 
+class Buttons(Frame):
+
+    def __init__(self, parent, span):
+        Frame.__init__(self, parent, width=span, height=24)
+        self.new_game_button = Button(self, text='New Game', background="#AAA")
+        self.new_game_button.pack(fill=X)
+
+    def pack(self, *args, **kwargs):
+        Frame.pack(self, *args, **kwargs)
+        self.pack_propagate(False)
+
+
 class Board(Canvas):
     """
-    View for game using tkinter framework
+        View for game using tkinter framework
     """
 
-    def __init__(self, parent, size):
+    def __init__(self, parent, size, span):
         """
           Purpose:
             Creates the window and initial boardview
@@ -43,7 +67,6 @@ class Board(Canvas):
         """
         #The window is sized to fit each 50px block plus a 10px buffer between blocks
         #and a 10px border around them
-        span = size * GRID_SQ_SIZE + BOARD_BORDER * 2 + BLOCK_BORDER
         Canvas.__init__(self, width=span, height=span, background="#555",
                         highlightthickness=0)
         self.parent = parent  # parent of this Frame

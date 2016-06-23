@@ -28,6 +28,7 @@ class Controller():
             "Right": lambda: self.model.shift_blocks_right()
             }
         self.view.bind_all("<Key>", self.move)
+        self.view.new_game_button.config(command=self.new_game)
         self.render_board()
 
     def move(self, user_move):
@@ -45,9 +46,16 @@ class Controller():
 
     def render_board(self):
         """
-        Instructs the view to draw the whole gameboard
+            Instructs the view to draw the whole gameboard
         """
         for x in range(self.size):
             for y in range(self.size):
                 val = self.model.value_at(x, y)
                 self.view.draw_block(x, y, val)
+
+    def new_game(self):
+        """
+           Starts a new game by deleting the model and creating a new one
+        """
+        self.model = Model(self.size)
+        self.render_board()
