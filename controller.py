@@ -38,8 +38,9 @@ class Controller():
             Returns a string when the game is over
         """
         key = user_move.keysym
-        self.valid_moves[key]()
-        x, y = self.model.add_new_block()
+        no_sliding = self.valid_moves[key]()
+        if not no_sliding:
+            x, y = self.model.add_new_block()
         self.render_board()
         if self.model.game_state_check():
             print(self.model.game_state_check())

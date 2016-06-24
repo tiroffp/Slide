@@ -90,25 +90,25 @@ class Model:
         """
             Shifts all blocks left and collapses same-valued blocks into their left neighbor
         """
-        print(self._shift_blocks(1, 1))
+        return self._shift_blocks(1, 1)
 
     def shift_blocks_right(self):
         """
             Shifts all blocks right and collapses same-valued blocks
         """
-        self._shift_blocks(1, 0)
+        return self._shift_blocks(1, 0)
 
     def shift_blocks_up(self):
         """
             Shifts all blocks up and collapses same-valued blocks
         """
-        self._shift_blocks(0, 1)
+        return self._shift_blocks(0, 1)
 
     def shift_blocks_down(self):
         """
             Shifts all blocks down and collapses same-valued blocks
         """
-        self._shift_blocks(0, 0)
+        return self._shift_blocks(0, 0)
 
     def _shift_blocks(self, shift_horizontal, shift_to_bottom_left):
         """
@@ -123,6 +123,7 @@ class Model:
             Down:  self._shift_blocks(0,1)
             returns True if no blocks have moved positions, otherwise returns false
         """
+        no_merged = True
         no_moves = 0
         for outer_iteration_value in range(self.size):
             last_block_val = self.empty_square_value
@@ -156,13 +157,14 @@ class Model:
                     last_block_val = val + val
                     self._block_merge(last_block_val, x_coord_old, y_coord_old, last_open,
                                       directional_adjustment, shift_horizontal, shift_to_bottom_left)
+                    no_merged = False
                 # Check for case where block could slide and collide
                 elif val > self.empty_square_value:
                     no_moves += self._block_collide(val, x_coord_old, y_coord_old, last_open,
                                                     shift_horizontal, shift_to_bottom_left)
                     last_block_val = val
                     last_open = last_open + (0 - directional_adjustment)
-        return no_moves == self.count_blocks()
+        return no_moves == self.count_blocks() and no_merged
 
     def _block_merge(self, new_val, x_coord_old, y_coord_old, last_open, directional_adjustment,
                      shift_horizontal, shift_to_bottom_left):
@@ -192,7 +194,6 @@ class Model:
         grid = self.grid.get()
         if shift_horizontal:
             if x_coord_old == last_open:
-                print(str(x_coord_old),str(y_coord_old))
                 return 1
             x_coord_new = last_open
             y_coord_new = y_coord_old
