@@ -34,7 +34,8 @@ class Model:
                 m.append(self.empty_square_value)
             l.append(m)
         # the grid is observable, so the controller can listen for changes
-        self.grid = Observable(l)
+        self.grid = l
+        self.last_move = Observable(None)
         self.add_new_block()
 
     def add_block_at(self, x, y, value):
@@ -43,25 +44,21 @@ class Model:
             Overwrites any value that is at the coordinate defined by (x,y)
             Does not check to see if coordinate is valid before adding
         """
-        grid = self.grid.get()
-        grid[x][y] = value
+        self.grid[x][y] = value
         if (x, y) in self.unoccupied_squares and value != self.empty_square_value:
             self.unoccupied_squares.remove((x, y))
         elif value == self.empty_square_value:
             self.unoccupied_squares.append((x, y))
-        self.grid.set(grid)
 
     def add_new_block(self):
         """
             Adds a new block to a random non-occupied (value of zero) square on the board
             Returns the coordinates of the addition as a tuple
         """
-        grid = self.grid.get()
         if len(self.unoccupied_squares) == 0:
             raise slideexceptions.AddBlockError("GameBoard is Full")
         new_x, new_y = self.unoccupied_squares.pop(int(random.random() * len(self.unoccupied_squares)))
-        grid[new_x][new_y] = self.new_block_value
-        self.grid.set(grid)
+        self.grid[new_x][new_y] = self.new_block_value
         return (new_x, new_y)
 
     def value_at(self, x, y):
@@ -71,7 +68,7 @@ class Model:
                 x (int) - x coordinate
                 y (int) - y coordinate
         """
-        return self.grid.get()[x][y]
+        return self.grid[x][y]
 
     def count_blocks(self):
         """
@@ -151,19 +148,24 @@ class Model:
                 else:
                     x_coord_old = outer_iteration_value
                     y_coord_old = inner_iteration_value
-                val = self.grid.get()[x_coord_old][y_coord_old]
+                val = self.grid[x_coord_old][y_coord_old]
                 # Check for case where blocks could merge
                 if val > self.empty_square_value and val == last_block_val:
                     last_block_val = val + val
-                    self._block_merge(last_block_val, x_coord_old, y_coord_old, last_open,
-                                      directional_adjustment, shift_horizontal, shift_to_bottom_left)
+                    m = self._block_merge(last_block_val, x_coord_old, y_coord_old, last_open,
+                                          directional_adjustment, shift_horizontal, shift_to_bottom_left)
+                    self.last_move.set(m)
                     no_merged = False
                 # Check for case where block could slide and collide
                 elif val > self.empty_square_value:
-                    no_moves += self._block_collide(val, x_coord_old, y_coord_old, last_open,
-                                                    shift_horizontal, shift_to_bottom_left)
+                    m = self._block_collide(val, x_coord_old, y_coord_old, last_open,
+                                            shift_horizontal, shift_to_bottom_left)
                     last_block_val = val
                     last_open = last_open + (0 - directional_adjustment)
+                    if m[0] != m[1]:
+                        self.last_move.set(m)
+                    else:
+                        no_moves += 1
         return no_moves == self.count_blocks() and no_merged
 
     def _block_merge(self, new_val, x_coord_old, y_coord_old, last_open, directional_adjustment,
@@ -171,43 +173,41 @@ class Model:
         """
             Handles blocks of same value colliding with eachother and becoming a single block of twice
             their value
+            Returns a tuple of coordinates - (old coordinates, new coordinates)
         """
-        grid = self.grid.get()
         if shift_horizontal:
             x_coord_new = last_open + directional_adjustment
             y_coord_new = y_coord_old
         else:
             x_coord_new = x_coord_old
             y_coord_new = last_open + directional_adjustment
-        grid[x_coord_new][y_coord_new] = new_val
-        grid[x_coord_old][y_coord_old] = self.empty_square_value
+        self.grid[x_coord_new][y_coord_new] = new_val
+        self.grid[x_coord_old][y_coord_old] = self.empty_square_value
         self.unoccupied_squares.append((x_coord_old, y_coord_old))
-        self.grid.set(grid)
+        old_coords = (x_coord_old, y_coord_old)
+        new_coords = (x_coord_new, y_coord_new)
+        return (old_coords, new_coords)
 
     def _block_collide(self, new_val, x_coord_old, y_coord_old, last_open, shift_horizontal,
                        shift_to_bottom_left):
         """
             Handles blocks moving and colliding with their right-most obstacle
             (wall or block of different value)
-            Returns 1 if the block does not slide before colliding (stays in place)
+            Returns a tuple of coordinates - (old coordinates, new coordinates)
         """
-        grid = self.grid.get()
         if shift_horizontal:
-            if x_coord_old == last_open:
-                return 1
             x_coord_new = last_open
             y_coord_new = y_coord_old
         else:
-            if y_coord_old == last_open:
-                return 1
             x_coord_new = x_coord_old
             y_coord_new = last_open
-        grid[x_coord_old][y_coord_old] = 0
-        grid[x_coord_new][y_coord_new] = new_val
+        self.grid[x_coord_old][y_coord_old] = 0
+        self.grid[x_coord_new][y_coord_new] = new_val
         self.unoccupied_squares.append((x_coord_old, y_coord_old))
         self.unoccupied_squares.remove((x_coord_new, y_coord_new))
-        self.grid.set(grid)
-        return 0
+        old_coords = (x_coord_old, y_coord_old)
+        new_coords = (x_coord_new, y_coord_new)
+        return (old_coords, new_coords)
 
     def game_state_check(self):
         """
@@ -215,12 +215,12 @@ class Model:
             class dictionary
         """
         column_maxes = []
-        for column in self.grid.get():
+        for column in self.grid:
             column_maxes.append(max(column))
         board_max = max(column_maxes)
         if board_max == self.game_goal:
             return self.game_states["Win"]
-        if self.no_valid_moves:
+        if self.no_valid_moves():
             return self.game_states["Loss"]
         return self.game_states["Play"]
 
@@ -229,4 +229,19 @@ class Model:
             Determine if there are any valid moves available
             Returns a boolean - True if any of the four moves are possible
         """
-        pass
+        if self.count_blocks() == (self.size * self.size):
+            #The board is full of blocks, now check if any could be merged
+            for i in range(self.size):
+                for j in range(self.size):
+                    val = self.grid[i][j]
+                    left = (i > 0) and (self.grid[i - 1][j] == val)
+                    right = (i < self.size - 1) and (self.grid[i + 1][j] == val)
+                    down = (j > 0) and (self.grid[i][j - 1] == val)
+                    up = (j < self.size - 1) and (self.grid[i][j + 1] == val)
+                    if left or right or down or up:
+                        #Theres a direction that you can move in!
+                        return False
+            # Theres no direction you can move in!
+            return True
+        # Board is not full, so obviously there is a spot a block could slide into
+        return False

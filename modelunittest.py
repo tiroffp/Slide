@@ -313,10 +313,17 @@ class Complex_Board_Tests(unittest.TestCase):
         Tests game_state_check
         """
         self.assertEqual(self.no_shift.game_state_check(), self.no_shift.game_states["Loss"])
-        self.assertEqual(self.s_board.game_state_check(), self.s_board.game_states["Loss"])
+        self.assertEqual(self.s_board.game_state_check(), self.s_board.game_states["Play"])
         self.assertEqual(self.m_board.game_state_check(), self.m_board.game_states["Play"])
         self.s_board.add_block_at(0, 0, self.s_board.game_goal)
         self.assertEqual(self.s_board.game_state_check(), self.s_board.game_states["Win"])
+
+    def test_no_valid_moves(self):
+        """
+            Tests the method that determines if there are any valid moves on the board
+        """
+        self.assertTrue(self.no_shift.no_valid_moves())
+        self.assertFalse(self.s_board.no_valid_moves())
 
 suite_new = unittest.TestLoader().loadTestsFromTestCase(New_Board_Tests)
 suite_complex = unittest.TestLoader().loadTestsFromTestCase(Complex_Board_Tests)
