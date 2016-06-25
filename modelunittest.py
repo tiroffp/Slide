@@ -325,6 +325,21 @@ class Complex_Board_Tests(unittest.TestCase):
         self.assertTrue(self.no_shift.no_valid_moves())
         self.assertFalse(self.s_board.no_valid_moves())
 
+    def test_subscribe_to_moves(self):
+        """
+            tests that functions passed to test_subscribe_to_moves are properly updated
+        """
+        self.s_board.subscribe_to_moves(self.subscribe_test)
+        self.s_board.shift_blocks_up()
+
+    def subscribe_test(self, move):
+        """
+            Helper function for test_subscribe_to_moves.
+        """
+        op1 = move == ((0, 1), (0, 0))
+        op2 = move == ((1, 1), (1, 0))
+        self.assertTrue(op1 or op2) 
+
 suite_new = unittest.TestLoader().loadTestsFromTestCase(New_Board_Tests)
 suite_complex = unittest.TestLoader().loadTestsFromTestCase(Complex_Board_Tests)
 alltests = unittest.TestSuite([suite_new, suite_complex])

@@ -38,6 +38,9 @@ class Model:
         self.last_move = Observable(None)
         self.add_new_block()
 
+    def subscribe_to_moves(self, func):
+        self.last_move.addCallback(func)
+
     def add_block_at(self, x, y, value):
         """
             Adds a block at a specific point on the board
