@@ -29,7 +29,9 @@ class Controller():
             }
         self.view.bind_all("<Key>", self.move)
         self.view.new_game_button.config(command=self.new_game)
-        self.render_board()
+        # self.render_board()
+        self.view.draw_new(self.model.add_new_block())
+        self.model.subscribe_to_moves(self.update_board)
 
     def move(self, user_move):
         """
@@ -38,10 +40,7 @@ class Controller():
             Returns a string when the game is over
         """
         key = user_move.keysym
-        no_sliding = self.valid_moves[key]()
-        if not no_sliding:
-            x, y = self.model.add_new_block()
-        self.render_board()
+        self.valid_moves[key]()
         if self.model.game_state_check():
             print(self.model.game_state_check())
 
@@ -60,3 +59,11 @@ class Controller():
         """
         self.model = Model(self.size)
         self.render_board()
+
+    def update_board(self, move):
+        """
+            updates the view based on the move given by the model
+        """
+        self.view.draw_move(move)
+        self.view.draw_new(self.model.add_new_block())
+
