@@ -36,7 +36,6 @@ class Model:
         # the grid is observable, so the controller can listen for changes
         self.grid = l
         self.last_move = Observable(None)
-        self.add_new_block()
 
     def subscribe_to_moves(self, func):
         self.last_move.addCallback(func)

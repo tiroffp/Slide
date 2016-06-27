@@ -18,6 +18,7 @@ class Controller():
             root - Tk object to handle view
             size - size of board
         """
+        self.root = root
         self.size = size
         self.model = Model(size)
         self.view = View(root, size)
@@ -40,9 +41,11 @@ class Controller():
             Returns a string when the game is over
         """
         key = user_move.keysym
-        self.valid_moves[key]()
+        no_sliding = self.valid_moves[key]()
         if self.model.game_state_check():
             print(self.model.game_state_check())
+        elif not no_sliding:
+            self.view.draw_new(self.model.add_new_block())
 
     def render_board(self):
         """
@@ -58,12 +61,12 @@ class Controller():
            Starts a new game by deleting the model and creating a new one
         """
         self.model = Model(self.size)
-        self.render_board()
+        self.view.reset()
+        self.view.draw_new(self.model.add_new_block())
+        self.model.subscribe_to_moves(self.update_board)
 
     def update_board(self, move):
         """
             updates the view based on the move given by the model
         """
         self.view.draw_move(move)
-        self.view.draw_new(self.model.add_new_block())
-

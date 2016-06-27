@@ -45,6 +45,17 @@ class View(Frame):
     def draw_new(self, coord):
         self._board.draw_new(coord)
 
+    def reset(self):
+        """
+            Purpose:
+                Resets the board back to just-after-init state
+            Arguments:
+                None
+            Returns:
+                None
+        """
+        self._board.wipe_board()
+
 
 class Buttons(Frame):
 
@@ -76,6 +87,8 @@ class Board(Canvas):
         Canvas.__init__(self, width=span, height=span, background="#555",
                         highlightthickness=0)
         self.parent = parent  # parent of this Frame
+        self.size = size
+        self.span = span
         self.valblock = ImageTk.PhotoImage(Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), (2, 63, 165)))
         self.block_tags = {}
         self.build_blocklist()
@@ -93,14 +106,13 @@ class Board(Canvas):
         self.create_rectangle(BOARD_BORDER, BOARD_BORDER,
                               span - BOARD_BORDER, span - BOARD_BORDER,
                               fill="#AAA")
-        block = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), "#FFF")
-        self.block = ImageTk.PhotoImage(block)
+        grid_sq = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), "#FFF")
+        self.grid_sq = ImageTk.PhotoImage(grid_sq)
         for x in range(size):
             for y in range(size):
                 ex = self.to_pix(x)
                 why = self.to_pix(y)
-                self.create_image(ex, why, image=self.block)
-                self.create_text(ex, why, text="", fill="#FFF")
+                self.create_image(ex, why, image=self.grid_sq)
 
     def build_blocklist(self):
         """
@@ -160,6 +172,7 @@ class Board(Canvas):
             color = self.blocklist[int(log(val, 2) + 1)]
         else:
             color = self.blocklist[0]
+        return color
 
     def draw_move(self, move):
         """
@@ -167,33 +180,45 @@ class Board(Canvas):
                 animates a block move, stopping at its new location on the board
             Arugents:
                 move (tuple of two coords): position 0 is the old coords, position 2
-                is the new coords 
+                is the new coords
         """
         old_coord, new_coord = move
         old_x, old_y = old_coord
         new_x, new_y = new_coord
+        old_x = self.to_pix(old_x)
+        old_y = self.to_pix(old_y)
+        new_x = self.to_pix(new_x)
+        new_y = self.to_pix(new_y)
         old_coord_id = str(old_coord[0]) + "," + str(old_coord[1])
         new_coord_id = str(new_coord[0]) + "," + str(new_coord[1])
         old_block = self.find_withtag(old_coord_id)[0]
-        if old_x > new_x or old_y > new_y:
-            shift = -1
-        else:
-            shift = 1
-        if old_x == new_x:
-            cur_y = old_y
-            while cur_y != new_y:
-                self.move(old_block, old_x, shift)
-                cur_y += shift
-        else:
-            cur_x = old_x
-            while cur_x != new_x:
-                self.move(old_block, shift, old_y)
-                cur_x += shift
+        # if old_x > new_x or old_y > new_y:
+        #     shift = -1
+        # else:
+        #     shift = 1
+        # if old_x == new_x:
+        #     cur_y = old_y
+        #     while cur_y != new_y:
+        #         self.move(old_block, old_x, shift)
+        #         cur_y += shift
+        # else:
+        #     cur_x = old_x
+        #     while cur_x != new_x:
+        #         self.move(old_block, shift, old_y)
+        #         cur_x += shift
+        self.move(old_block, new_x - old_x, new_y - old_y)
+        old_text = self.find_withtag(old_coord_id + "+")[0]
+        self.move(old_text, new_x - old_x, new_y - old_y)
+        val = self.itemcget(old_text, "text")
         if self.find_withtag(new_coord_id):
-            old_text = self.find_withtag(old_coord_id + "+")[0]
-            val = self.itemcget(old_text, text)
             new_val = int(val) * 2
             self.itemconfigure(old_text, text=str(new_val))
+            self.delete(new_coord_id)
+            self.delete(new_coord_id + "+")
+        else:
+            new_val = int(val)
+        self.itemconfigure(old_block, tag=new_coord_id, image=self.get_color(new_val))
+        self.itemconfigure(old_text, tag=new_coord_id + "+")
 
     def draw_new(self, coord):
         """
@@ -206,8 +231,24 @@ class Board(Canvas):
         block_id = str(x) + "," + str(y)
         text_id = block_id + "+"
         block = self.get_color(2)
+        x = self.to_pix(x)
+        y = self.to_pix(y)
         self.create_image(x, y, image=block, tag=block_id)
         self.create_text(x, y, text=str(2), tag=text_id)
+
+    def wipe_board(self):
+        """
+            Purpose:
+                Removes all items from the canvas, then redraws the board to
+                just-after-init state
+            Arguments:
+                None
+            Returns:
+                None
+        """
+        for id in self.find_all():
+            self.delete(id)
+        self.build_board(self.size, self.span)
 
 # Used only when testing view before it was ready to be called by the controller
 # def main():

@@ -47,10 +47,10 @@ class New_Board_Tests(unittest.TestCase):
         """
         Tests that models initialize properly
         """
-        self.assertEqual(self.s_board.count_blocks(), 1)
-        self.assertEqual(self.m_board.count_blocks(), 1)
-        self.assertEqual(self.l_board.count_blocks(), 1)
-        self.assertEqual(self.xl_board.count_blocks(), 1)
+        self.assertEqual(self.s_board.count_blocks(), 0)
+        self.assertEqual(self.m_board.count_blocks(), 0)
+        self.assertEqual(self.l_board.count_blocks(), 0)
+        self.assertEqual(self.xl_board.count_blocks(), 0)
 
         self.assertRaises(TypeError, model, 1)
         self.assertRaises(TypeError, model, 0)
@@ -84,20 +84,21 @@ class New_Board_Tests(unittest.TestCase):
         """
         Tests the add_new_block method of the model
         """
+        self.run_test_add_new_block(self.s_board, 1)
+        self.run_test_add_new_block(self.m_board, 1)
+        self.run_test_add_new_block(self.l_board, 1)
+        self.run_test_add_new_block(self.xl_board, 1)
+
         self.run_test_add_new_block(self.s_board, 2)
         self.run_test_add_new_block(self.m_board, 2)
         self.run_test_add_new_block(self.l_board, 2)
         self.run_test_add_new_block(self.xl_board, 2)
 
-        self.run_test_add_new_block(self.s_board, 3)
-        self.run_test_add_new_block(self.m_board, 3)
-        self.run_test_add_new_block(self.l_board, 3)
         self.run_test_add_new_block(self.xl_board, 3)
-
         self.run_test_add_new_block(self.xl_board, 4)
         self.run_test_add_new_block(self.xl_board, 5)
-        self.run_test_add_new_block(self.xl_board, 6)
 
+        self.run_test_add_new_block(self.s_board, 3)
         self.run_test_add_new_block(self.s_board, 4)
         self.assertRaises(slideexceptions.AddBlockError, self.run_test_add_new_block, self.s_board, 5)
 
@@ -124,13 +125,13 @@ class New_Board_Tests(unittest.TestCase):
         """
         Common code for testing add_block_at
         """
+        self.assertEqual(m.count_blocks(), 0)
+        m.add_block_at(0, 0, 2)
         self.assertEqual(m.count_blocks(), 1)
-        if m.value_at(0, 0) == 0:
-            m.add_block_at(0, 0, 2)
-        else:
-            m.add_block_at(0, 1, 2)
+        self.assertTrue(m.value_at(0, 0))
+        m.add_block_at(0, 1, 2)
         self.assertEqual(m.count_blocks(), 2)
-        self.assertTrue(m.value_at(0, 0) or m.value_at(0, 1))
+        self.assertTrue(m.value_at(0, 0) and m.value_at(0, 1))
 
 
 class Complex_Board_Tests(unittest.TestCase):
@@ -338,7 +339,7 @@ class Complex_Board_Tests(unittest.TestCase):
         """
         op1 = move == ((0, 1), (0, 0))
         op2 = move == ((1, 1), (1, 0))
-        self.assertTrue(op1 or op2) 
+        self.assertTrue(op1 or op2)
 
 suite_new = unittest.TestLoader().loadTestsFromTestCase(New_Board_Tests)
 suite_complex = unittest.TestLoader().loadTestsFromTestCase(Complex_Board_Tests)
