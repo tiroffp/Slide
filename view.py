@@ -56,6 +56,9 @@ class View(Frame):
         """
         self._board.wipe_board()
 
+    def draw_moves(self, moves):
+        return self._board.draw_moves(moves)
+
 
 class Buttons(Frame):
 
@@ -174,10 +177,30 @@ class Board(Canvas):
             color = self.blocklist[0]
         return color
 
-    def draw_move(self, move):
+    def draw_moves(self, moves):
         """
             Purpose:
                 animates a block move, stopping at its new location on the board
+            Arugents:
+                moves (list of moves): each move is a tuple: position 0 is the old coords,
+                position 2 is the new coords
+        """
+        # want a complete copy of the moves list, not just a reference, since it will be editied during
+        # the following loop
+        moves_left = list(moves)
+        for move in moves:
+            fin = self.animate(move)
+            if fin:
+                moves_left.remove(move)
+        if moves_left == []:
+            return "fin"
+        else:
+            return self.after(1, self.draw_moves, moves_left)
+
+    def animate(self, move):
+        """
+            Purpose:
+                animates a block move
             Arugents:
                 move (tuple of two coords): position 0 is the old coords, position 2
                 is the new coords
@@ -192,33 +215,37 @@ class Board(Canvas):
         old_coord_id = str(old_coord[0]) + "," + str(old_coord[1])
         new_coord_id = str(new_coord[0]) + "," + str(new_coord[1])
         old_block = self.find_withtag(old_coord_id)[0]
-        # if old_x > new_x or old_y > new_y:
-        #     shift = -1
-        # else:
-        #     shift = 1
-        # if old_x == new_x:
-        #     cur_y = old_y
-        #     while cur_y != new_y:
-        #         self.move(old_block, old_x, shift)
-        #         cur_y += shift
-        # else:
-        #     cur_x = old_x
-        #     while cur_x != new_x:
-        #         self.move(old_block, shift, old_y)
-        #         cur_x += shift
-        self.move(old_block, new_x - old_x, new_y - old_y)
         old_text = self.find_withtag(old_coord_id + "+")[0]
-        self.move(old_text, new_x - old_x, new_y - old_y)
-        val = self.itemcget(old_text, "text")
+        if old_x > new_x or old_y > new_y:
+            shift = -5
+        else:
+            shift = 5
+        if old_x == new_x:
+            self.move(old_block, 0, shift)
+            self.move(old_text, 0, shift)
+            finalize = self.coords(old_block) == list((new_x, new_y))
+        else:
+            self.move(old_block, shift, 0)
+            self.move(old_text, shift, 0)
+            finalize = self.coords(old_block) == list((new_x, new_y))
+        if finalize:
+            self.finalize_move(old_block, new_coord_id, old_text)
+            return "fin"
+
+    def finalize_move(self, old_block, new_coord_id, text_id):
+        """
+            Complete the last steps neccessary in a move animation
+        """
+        val = self.itemcget(text_id, "text")
         if self.find_withtag(new_coord_id):
             new_val = int(val) * 2
-            self.itemconfigure(old_text, text=str(new_val))
+            self.itemconfigure(text_id, text=str(new_val))
             self.delete(new_coord_id)
             self.delete(new_coord_id + "+")
         else:
             new_val = int(val)
         self.itemconfigure(old_block, tag=new_coord_id, image=self.get_color(new_val))
-        self.itemconfigure(old_text, tag=new_coord_id + "+")
+        self.itemconfigure(text_id, tag=new_coord_id + "+")
 
     def draw_new(self, coord):
         """

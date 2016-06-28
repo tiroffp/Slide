@@ -20,6 +20,7 @@ class Controller():
         """
         self.root = root
         self.size = size
+        self.moves = []
         self.model = Model(size)
         self.view = View(root, size)
         self.valid_moves = {
@@ -32,7 +33,7 @@ class Controller():
         self.view.new_game_button.config(command=self.new_game)
         # self.render_board()
         self.view.draw_new(self.model.add_new_block())
-        self.model.subscribe_to_moves(self.update_board)
+        self.model.subscribe_to_moves(self.update_moves)
 
     def move(self, user_move):
         """
@@ -42,6 +43,7 @@ class Controller():
         """
         key = user_move.keysym
         no_sliding = self.valid_moves[key]()
+        self.do_moves()
         if self.model.game_state_check():
             print(self.model.game_state_check())
         elif not no_sliding:
@@ -63,10 +65,18 @@ class Controller():
         self.model = Model(self.size)
         self.view.reset()
         self.view.draw_new(self.model.add_new_block())
-        self.model.subscribe_to_moves(self.update_board)
+        self.model.subscribe_to_moves(self.update_moves)
 
-    def update_board(self, move):
+    def update_moves(self, move):
         """
-            updates the view based on the move given by the model
+            Collects the moves made by the model
         """
-        self.view.draw_move(move)
+        self.moves.append(move)
+
+    def do_moves(self):
+        """
+          Executes the moves collected from the model
+        """
+        fin = self.view.draw_moves(self.moves)
+        if fin:
+            self.moves = []
