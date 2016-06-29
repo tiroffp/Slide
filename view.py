@@ -70,6 +70,18 @@ class View(Frame):
         """
         return self._board.animating
 
+    def game_end(self, game_state):
+        """
+            Purpose:
+                Displays result of game ending (game loss display or game win display)
+            Arguments:
+                game_state (pos int) - denotes the game state. Expects 1 or 2 (loss or win
+                    win respectively), not 0 (game not over)
+            Returns:
+                None
+        """
+        self._board.game_end(game_state)
+
 
 class Buttons(Frame):
 
@@ -315,6 +327,24 @@ class Board(Canvas):
         for id in self.find_all():
             self.delete(id)
         self.build_board(self.size, self.span)
+
+    def game_end(self, game_state):
+        """
+            Purpose:
+                Displays result of game ending (game loss display or game win display)
+            Arguments:
+                game_state (pos int) - denotes the game state. Expects 1 or 2 (loss or win
+                    win respectively), not 0 (game not over)
+            Returns:
+                None
+            this method was quickly made and therefore gross. sorry
+        """
+        if game_state == 2:
+            text = "you lose!"
+        else:
+            text = "you win!"
+        self.create_rectangle(self.span/2 - 50, self.span/2 - 25, self.span/2 + 50, self.span/2 + 25, fill="#FFF")
+        self.create_text(self.span/2, self.span/2, text=text)
 
 # Used only when testing view before it was ready to be called by the controller
 # def main():
