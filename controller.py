@@ -42,10 +42,12 @@ class Controller():
             Returns a string when the game is over
         """
         key = user_move.keysym
+        if self.view.is_animating():
+            return
         no_sliding = self.valid_moves[key]()
         self.do_moves()
-        if self.model.game_state_check():
-            print(self.model.game_state_check())
+        if s = self.model.game_state_check():
+            self.view.game_
         elif not no_sliding:
             self.view.draw_new(self.model.add_new_block())
 
