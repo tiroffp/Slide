@@ -42,8 +42,8 @@ class View(Frame):
     def draw_move(self, move):
         self._board.draw_move(move)
 
-    def draw_new(self, coord):
-        self._board.draw_new(coord)
+    def draw_new(self, coord, val):
+        self._board.draw_new(coord, val)
 
     def reset(self):
         """
@@ -273,28 +273,29 @@ class Board(Canvas):
         self.itemconfigure(old_block, tag=new_coord_id, image=self.get_block_image(new_val))
         self.itemconfigure(text_id, tag=new_coord_id + "+")
 
-    def draw_new(self, coord):
+    def draw_new(self, coord, val):
         """
             Purpose:
                 adds a new block to the board
             Arguments:
                 coord (2tuple) - ints representing x and y position
+                val (int) - value of new block
         """
         if self.animating:
-            self.after(5, self.draw_new, coord)
+            self.after(5, self.draw_new, coord, val)
         else:
             x, y = coord
             block_id = str(x) + "," + str(y)
             text_id = block_id + "+"
             x = self.to_pix(x)
             y = self.to_pix(y)
-            image = Image.new("RGB", (0, 0), COLORS[2])
+            image = Image.new("RGB", (0, 0), COLORS[val])
             block_image = ImageTk.PhotoImage(image)
             self.create_image(x, y, image=block_image, tag=block_id)
-            self.create_text(x, y, text=str(2), tag=text_id)
-            self.animate_new(block_id, [], 0)
+            self.create_text(x, y, text=str(val), tag=text_id)
+            self.animate_new(block_id, [], 0, val)
 
-    def animate_new(self, block_id, holdref, size):
+    def animate_new(self, block_id, holdref, size, val):
         """
             Purpose:
                 animates the addition of a new block to the board
@@ -306,11 +307,11 @@ class Board(Canvas):
                 size (int) - current size of the animated block
         """
         if size < BLOCK_SIZE:
-            image = Image.new("RGB", (size, size), COLORS[2])
+            image = Image.new("RGB", (size, size), COLORS[val])
             block_image = ImageTk.PhotoImage(image)
             holdref.append(block_image)
             self.itemconfigure(block_id, image=block_image)
-            self.after(5, self.animate_new, block_id, holdref, size + 5)
+            self.after(5, self.animate_new, block_id, holdref, size + 5, val)
         else:
             self.itemconfigure(block_id, image=self.get_block_image(2))
 
