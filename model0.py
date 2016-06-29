@@ -8,7 +8,7 @@ from Observable import Observable
 class Model:
 
     size = None
-    game_states = {"Win": "you win!", "Loss": "you lose!", "Play": 0}
+    game_states = {"Win": 1, "Loss": 2, "Play": 0}
     unoccupied_squares = None
     game_goal = 2048
     empty_square_value = 0
