@@ -20,6 +20,7 @@ class Controller():
         """
         self.root = root
         self.size = size
+        self.game_over = False
         self.moves = []
         self.model = Model(size)
         self.view = View(root, size)
@@ -27,7 +28,8 @@ class Controller():
             "Up": lambda: self.model.shift_blocks_up(),
             "Down": lambda: self.model.shift_blocks_down(),
             "Left": lambda: self.model.shift_blocks_left(),
-            "Right": lambda: self.model.shift_blocks_right()
+            "Right": lambda: self.model.shift_blocks_right(),
+            "s": lambda: self.backdoor()
             }
         self.view.bind_all("<Key>", self.move)
         self.view.new_game_button.config(command=self.new_game)
@@ -41,13 +43,17 @@ class Controller():
             Expects a user move - as defined by the dictionary valid_moves
             Returns a string when the game is over
         """
+        if self.game_over:
+            return
         key = user_move.keysym
         if self.view.is_animating():
             return
         no_sliding = self.valid_moves[key]()
         self.do_moves()
-        if s = self.model.game_state_check():
-            self.view.game_
+        game_check = self.model.game_state_check()
+        if game_check:
+            self.view.game_end(game_check)
+            self.game_over = True
         elif not no_sliding:
             self.view.draw_new(self.model.add_new_block())
 
@@ -65,6 +71,7 @@ class Controller():
            Starts a new game by deleting the model and creating a new one
         """
         self.model = Model(self.size)
+        self.game_over = False
         self.view.reset()
         self.view.draw_new(self.model.add_new_block())
         self.model.subscribe_to_moves(self.update_moves)
@@ -82,3 +89,13 @@ class Controller():
         fin = self.view.draw_moves(self.moves)
         if fin:
             self.moves = []
+
+    def backdoor(self):
+        for x in range(self.size):
+            for y in range(self.size):
+                m = (x + y) % 2 == 0
+                if m:
+                    self.model.add_block_at(x, y, 2)
+                else:
+                    self.model.add_block_at(x, y, 4)
+                self.view.draw_new((x, y))
