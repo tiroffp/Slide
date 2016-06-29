@@ -59,6 +59,17 @@ class View(Frame):
     def draw_moves(self, moves):
         return self._board.draw_moves(moves)
 
+    def is_animating(self):
+        """
+            Purpose:
+                Determines if the view is currently animating somthing
+            Arugents:
+                None
+            Returns:
+                True if the view is busy animating something, else false
+        """
+        return self._board.animating
+
 
 class Buttons(Frame):
 
@@ -92,7 +103,7 @@ class Board(Canvas):
         self.parent = parent  # parent of this Frame
         self.size = size
         self.span = span
-        self.animating_slide = False
+        self.animating = False
         self.valblock = ImageTk.PhotoImage(Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), (2, 63, 165)))
         self.block_tags = {}
         self.build_blocklist()
@@ -156,14 +167,14 @@ class Board(Canvas):
         text = self.find_withtag(coord_text)[0]
         x = self.to_pix(x)
         y = self.to_pix(y)
-        color = self.get_color(val)
+        color = self.get_block_image(val)
         self.itemconfigure(block, image=color)
         self.itemconfigure(text, text=str(val))
 
-    def get_color(self, val):
+    def get_block_image(self, val):
         """
             Purpose:
-                Retrieves the color block for the given value
+                Retrieves the block image for the given value
             Arguments:
                 val (int) - value to retrieve color for
             Returns:
@@ -188,14 +199,14 @@ class Board(Canvas):
         """
         # want a complete copy of the moves list, not just a reference, since it will be editied during
         # the following loop
-        self.animating_slide = True
+        self.animating = True
         moves_left = list(moves)
         for move in moves:
             fin = self.animate(move)
             if fin:
                 moves_left.remove(move)
         if moves_left == []:
-            self.animating_slide = False
+            self.animating = False
             return "fin"
         else:
             return self.after(5, self.draw_moves, moves_left)
@@ -247,7 +258,7 @@ class Board(Canvas):
             self.delete(new_coord_id + "+")
         else:
             new_val = int(val)
-        self.itemconfigure(old_block, tag=new_coord_id, image=self.get_color(new_val))
+        self.itemconfigure(old_block, tag=new_coord_id, image=self.get_block_image(new_val))
         self.itemconfigure(text_id, tag=new_coord_id + "+")
 
     def draw_new(self, coord):
@@ -257,30 +268,39 @@ class Board(Canvas):
             Arguments:
                 coord (2tuple) - ints representing x and y position
         """
-        if self.animating_slide:
+        if self.animating:
             self.after(5, self.draw_new, coord)
         else:
             x, y = coord
             block_id = str(x) + "," + str(y)
             text_id = block_id + "+"
-            # block_color = COLORS[2]
-            block = self.get_color(2)
             x = self.to_pix(x)
             y = self.to_pix(y)
-            # image = Image.new("RGB", (0, 0), block_color)
-            # block_image = ImageTk.PhotoImage(image)
-            self.create_image(x, y, image=block, tag=block_id)
+            image = Image.new("RGB", (0, 0), COLORS[2])
+            block_image = ImageTk.PhotoImage(image)
+            self.create_image(x, y, image=block_image, tag=block_id)
             self.create_text(x, y, text=str(2), tag=text_id)
-            # self.animate_new(block_id)
+            self.animate_new(block_id, [], 0)
 
-    def animate_new(self, block_id):
+    def animate_new(self, block_id, holdref, size):
         """
             Purpose:
                 animates the addition of a new block to the board
             Arguments:
                 block_id (int) - Id of block to animate as new block
+                holdref (list) - list of ImageTkPhotoImages. Because Tk doesn't handle
+                    images properly this guy needs to hold a reference to them during the animation
+                    so they don't get garabage collected
+                size (int) - current size of the animated block
         """
-        pass
+        if size < BLOCK_SIZE:
+            image = Image.new("RGB", (size, size), COLORS[2])
+            block_image = ImageTk.PhotoImage(image)
+            holdref.append(block_image)
+            self.itemconfigure(block_id, image=block_image)
+            self.after(5, self.animate_new, block_id, holdref, size + 5)
+        else:
+            self.itemconfigure(block_id, image=self.get_block_image(2))
 
     def wipe_board(self):
         """
