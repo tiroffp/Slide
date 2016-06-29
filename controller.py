@@ -34,7 +34,9 @@ class Controller():
         self.view.bind_all("<Key>", self.move)
         self.view.new_game_button.config(command=self.new_game)
         # self.render_board()
-        self.view.draw_new(self.model.add_new_block())
+        coords = self.model.add_new_block()
+        val = self.model.value_at(coords[0], coords[1])
+        self.view.draw_new(coords, val)
         self.model.subscribe_to_moves(self.update_moves)
 
     def move(self, user_move):
@@ -55,7 +57,9 @@ class Controller():
             self.view.game_end(game_check)
             self.game_over = True
         elif not no_sliding:
-            self.view.draw_new(self.model.add_new_block())
+            coords = self.model.add_new_block()
+            val = self.model.value_at(coords[0], coords[1])
+            self.view.draw_new(coords, val)
 
     def render_board(self):
         """
@@ -73,7 +77,9 @@ class Controller():
         self.model = Model(self.size)
         self.game_over = False
         self.view.reset()
-        self.view.draw_new(self.model.add_new_block())
+        coords = self.model.add_new_block()
+        val = self.model.value_at(coords[0], coords[1])
+        self.view.draw_new(coords, val)
         self.model.subscribe_to_moves(self.update_moves)
 
     def update_moves(self, move):
@@ -96,6 +102,7 @@ class Controller():
                 m = (x + y) % 2 == 0
                 if m:
                     self.model.add_block_at(x, y, 2)
+                    self.view.draw_new((x, y), 2)
                 else:
                     self.model.add_block_at(x, y, 4)
-                self.view.draw_new((x, y))
+                    self.view.draw_new((x, y), 4)
