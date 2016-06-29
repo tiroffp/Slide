@@ -60,7 +60,9 @@ class Model:
         if len(self.unoccupied_squares) == 0:
             raise slideexceptions.AddBlockError("GameBoard is Full")
         new_x, new_y = self.unoccupied_squares.pop(int(random.random() * len(self.unoccupied_squares)))
-        self.grid[new_x][new_y] = self.new_block_value
+        # randomly picks 2 or 4 as the value of the new block
+        val = int(random.random() * 2 + 1) * 2
+        self.grid[new_x][new_y] = val
         return (new_x, new_y)
 
     def value_at(self, x, y):
