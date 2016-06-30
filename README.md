@@ -1,14 +1,14 @@
 # Slide
-Creating a 2408 game in python
+Creating a 2048 game in python
 
-TODO LIST:
+Feature Idea List:
 
--Make actual game end
+- Basic menu/settings/intro
 
--Basic menu/settings/intro
+- Saving current game on exiting
 
--Saving current game on exiting
+- Score?
 
--Score?
+Known Bugs:
 
-- spawn 2 or 4 val block on each move
+- There is a window where, if moves are made fast enough, the view crashes as it cannot find an expected text object
