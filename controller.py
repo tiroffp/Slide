@@ -33,7 +33,6 @@ class Controller():
             }
         self.view.bind_all("<Key>", self.move)
         self.view.new_game_button.config(command=self.new_game)
-        # self.render_board()
         coords = self.model.add_new_block()
         val = self.model.value_at(coords[0], coords[1])
         self.view.draw_new(coords, val)
@@ -60,15 +59,6 @@ class Controller():
             coords = self.model.add_new_block()
             val = self.model.value_at(coords[0], coords[1])
             self.view.draw_new(coords, val)
-
-    def render_board(self):
-        """
-            Instructs the view to draw the whole gameboard
-        """
-        for x in range(self.size):
-            for y in range(self.size):
-                val = self.model.value_at(x, y)
-                self.view.draw_block(x, y, val)
 
     def new_game(self):
         """
