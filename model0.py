@@ -217,10 +217,10 @@ class Model:
             column_maxes.append(max(column))
         board_max = max(column_maxes)
         if board_max == GAME_GOAL:
-            return GAME_STATES["Win"]
+            return GAME_STATE["Win"]
         if self.no_valid_moves():
-            return GAME_STATES["Loss"]
-        return GAME_STATES["Play"]
+            return GAME_STATE["Loss"]
+        return GAME_STATE["Play"]
 
     def no_valid_moves(self):
         """
