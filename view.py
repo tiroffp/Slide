@@ -30,6 +30,7 @@ class View(Frame):
         span = size * GRID_SQ_SIZE + BOARD_BORDER * 2 + BLOCK_BORDER
         parent.minsize(span, span)
         parent.title('Slide')
+        parent.iconbitmap('block.ico')
         self.buttons = Buttons(self, span)
         self.buttons.pack()
         self.new_game_button = self.buttons.new_game_button
@@ -313,7 +314,7 @@ class Board(Canvas):
             self.itemconfigure(block_id, image=block_image)
             self.after(5, self.animate_new, block_id, holdref, size + 5, val)
         else:
-            self.itemconfigure(block_id, image=self.get_block_image(2))
+            self.itemconfigure(block_id, image=self.get_block_image(val))
 
     def wipe_board(self):
         """
