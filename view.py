@@ -249,7 +249,10 @@ class Board(Canvas):
         old_coord_id = str(old_coord[0]) + "," + str(old_coord[1])
         new_coord_id = str(new_coord[0]) + "," + str(new_coord[1])
         moving_block = self.find_withtag(old_coord_id)[0]
-        moving_text = self.find_withtag(old_coord_id + "+")[0]
+        try:
+            moving_text = self.find_withtag(old_coord_id + "+")[0]
+        except IndexError:
+            raise Exception("can't find " + str(old_coord_id) + "+")
         if old_x > new_x or old_y > new_y:
             shift = - ANIMATION_SLIDE_ADJ
         else:
@@ -274,34 +277,6 @@ class Board(Canvas):
                 self.move(moving_text, diff, 0)
                 self.finalize_move(moving_block, new_coord_id, moving_text)
                 return "fin"
-
-    def maybe_final_frame(self, diff, moving_block, new_coord_id, moving_text):
-        """
-            Purpose:
-                If the block is within a frame of reaching/passing the new coordinates,
-                move to final spot and return True
-            Arguments:
-                diff (int) - difference between current coordinate and destination coordinate
-                             on axis of movement
-                moving_block (string) - tag of block being moved in animation
-                new_coord_id (string) - tag that the block will be assigned at end of move
-                moving_text (string) - tag of the text being moved with the block
-            Returns:
-                True if the block was moved into the final position, otherwise false
-        """
-        print(curr_coords)
-        print(new_coords)
-        print(delta_x)
-        print(delta_y)
-        if diff < ANIMATION_SLIDE_ADJ:
-            # self.coords(moving_block, new_coords)
-            self.move(moving_block, diff, 0)
-            self.move(moving_text, diff, 0)
-            self.finalize_move(moving_block, new_coord_id, moving_text)
-        else:
-            return False
-        self.create_rectangle(new_coords[0], new_coords[1], new_coords[0] + 10, new_coords[1] + 10, fill="#000")
-        return True
 
     def finalize_move(self, moving_block, new_coord_id, moving_text):
         """
@@ -368,6 +343,7 @@ class Board(Canvas):
             self.delete(block_id)
             self.draw_block(x, y, fill, tag=block_id, size=BLOCK_SIZE)
             self.create_text(x + (BLOCK_SIZE / 2), y + (BLOCK_SIZE / 2), text=str(val), tag=text_id)
+            print(text_id)
 
     def wipe_board(self):
         """
