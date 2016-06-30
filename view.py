@@ -3,17 +3,7 @@
 from tkinter import *
 from PIL import Image, ImageTk
 from math import log
-
-
-COLORS = ((265, 265, 265), (265, 63, 165), (125, 135, 185), (190, 193, 212), (214, 188, 192), (187, 119, 132),
-          (142, 6, 59), (74, 111, 227), (133, 149, 225), (181, 187, 227), (230, 175, 185),
-          (224, 123, 145), (211, 63, 106), (17, 198, 56), (141, 213, 147), (198, 222, 199),
-          (234, 211, 198), (240, 185, 141), (239, 151, 8), (15, 207, 192), (156, 222, 214),
-          (213, 234, 231), (243, 225, 235), (246, 196, 225), (247, 156, 212))
-BLOCK_SIZE = 50
-BOARD_BORDER = 50
-GRID_SQ_SIZE = 55
-BLOCK_BORDER = GRID_SQ_SIZE - BLOCK_SIZE
+from GlobalConstants import *
 
 
 class View(Frame):
@@ -38,12 +28,24 @@ class View(Frame):
         self.pack()
 
     def draw_block(self, x, y, val):
+        """
+          Purpose:
+            Adds a block to the board at the grid coordinates of x, y of value val
+          Arguments:
+            x (int): Grid coordinate on the x axis of the block on board
+            y (int): Grid coordinate on the y axis of the block on board
+            val (int): Value of the block being added
+        """
         self._board.draw_block(x, y, val)
 
-    def draw_move(self, move):
-        self._board.draw_move(move)
-
     def draw_new(self, coord, val):
+        """
+            Purpose:
+                adds a new block to the board
+            Arguments:
+                coord (2tuple) - ints representing x and y position
+                val (int) - value of new block
+        """
         self._board.draw_new(coord, val)
 
     def reset(self):
@@ -58,6 +60,13 @@ class View(Frame):
         self._board.wipe_board()
 
     def draw_moves(self, moves):
+        """
+            Purpose:
+                animates a block move, stopping at its new location on the board
+            Arugents:
+                moves (list of moves): each move is a tuple: position 0 is the old coords,
+                position 2 is the new coords
+        """
         return self._board.draw_moves(moves)
 
     def is_animating(self):
@@ -117,7 +126,6 @@ class Board(Canvas):
         self.size = size
         self.span = span
         self.animating = False
-        self.valblock = ImageTk.PhotoImage(Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), (2, 63, 165)))
         self.block_tags = {}
         self.build_blocklist()
         self.build_board(size, span)
@@ -197,7 +205,7 @@ class Board(Canvas):
             # the plus one is because I found this list of colors on the internet
             # and didn't organize them by colors, and the first one is a super jarring
             # bright pink
-            color = self.blocklist[int(log(val, 2) + 1)]
+            color = self.blocklist[int(log(val, BLOCK_BASE_VALUE) + 1)]
         else:
             color = self.blocklist[0]
         return color
@@ -222,7 +230,7 @@ class Board(Canvas):
             self.animating = False
             return "fin"
         else:
-            return self.after(5, self.draw_moves, moves_left)
+            return self.after(ANIMATION_DELAY, self.draw_moves, moves_left)
 
     def animate(self, move):
         """
@@ -244,9 +252,9 @@ class Board(Canvas):
         old_block = self.find_withtag(old_coord_id)[0]
         old_text = self.find_withtag(old_coord_id + "+")[0]
         if old_x > new_x or old_y > new_y:
-            shift = -5
+            shift = - ANIMATION_SLIDE_MOVEMENT_PER_FRAME
         else:
-            shift = 5
+            shift = ANIMATION_SLIDE_MOVEMENT_PER_FRAME
         if old_x == new_x:
             self.move(old_block, 0, shift)
             self.move(old_text, 0, shift)
@@ -265,7 +273,7 @@ class Board(Canvas):
         """
         val = self.itemcget(text_id, "text")
         if self.find_withtag(new_coord_id):
-            new_val = int(val) * 2
+            new_val = int(val) * BLOCK_BASE_VALUE
             self.itemconfigure(text_id, text=str(new_val))
             self.delete(new_coord_id)
             self.delete(new_coord_id + "+")
@@ -283,7 +291,7 @@ class Board(Canvas):
                 val (int) - value of new block
         """
         if self.animating:
-            self.after(5, self.draw_new, coord, val)
+            self.after(ANIMATION_DELAY, self.draw_new, coord, val)
         else:
             x, y = coord
             block_id = str(x) + "," + str(y)
@@ -312,7 +320,8 @@ class Board(Canvas):
             block_image = ImageTk.PhotoImage(image)
             holdref.append(block_image)
             self.itemconfigure(block_id, image=block_image)
-            self.after(5, self.animate_new, block_id, holdref, size + 5, val)
+            self.after(ANIMATION_DELAY, self.animate_new, block_id,
+                       holdref, size + ANIMATION_GROWTH, val)
         else:
             self.itemconfigure(block_id, image=self.get_block_image(val))
 
@@ -341,7 +350,7 @@ class Board(Canvas):
                 None
             this method was quickly made and therefore gross. sorry
         """
-        if game_state == 2:
+        if game_state == GAME_STATE["Loss"]:
             text = "you lose!"
         else:
             text = "you win!"

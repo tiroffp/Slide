@@ -3,16 +3,10 @@ refers to the value at (x,y) on the grid displayed to the user."""
 import random
 import slideexceptions
 from Observable import Observable
+from GlobalConstants import *
 
 
 class Model:
-
-    size = None
-    game_states = {"Win": 1, "Loss": 2, "Play": 0}
-    unoccupied_squares = None
-    game_goal = 2048
-    empty_square_value = 0
-    new_block_value = 2
 
     def __init__(self, num):
         """
@@ -31,7 +25,7 @@ class Model:
             for j in range(num):
                 coordinate = i, j
                 self.unoccupied_squares.append(coordinate)
-                m.append(self.empty_square_value)
+                m.append(EMPTY_SQUARE_VALUE)
             l.append(m)
         # the grid is observable, so the controller can listen for changes
         self.grid = l
@@ -47,9 +41,9 @@ class Model:
             Does not check to see if coordinate is valid before adding
         """
         self.grid[x][y] = value
-        if (x, y) in self.unoccupied_squares and value != self.empty_square_value:
+        if (x, y) in self.unoccupied_squares and value != EMPTY_SQUARE_VALUE:
             self.unoccupied_squares.remove((x, y))
-        elif value == self.empty_square_value:
+        elif value == EMPTY_SQUARE_VALUE:
             self.unoccupied_squares.append((x, y))
 
     def add_new_block(self):
@@ -83,7 +77,7 @@ class Model:
         for i in range(self.size):
             for j in range(self.size):
                 b = self.value_at(i, j)
-                if b > self.empty_square_value:
+                if b > EMPTY_SQUARE_VALUE:
                     result += 1
         return result
 
@@ -127,7 +121,7 @@ class Model:
         no_merged = True
         no_moves = 0
         for outer_iteration_value in range(self.size):
-            last_block_val = self.empty_square_value
+            last_block_val = EMPTY_SQUARE_VALUE
             # initialize the last open grid square to be the first square that will be checked, which is the lowest
             # number on the axis if moving down or left, otherwise it is the highest
             if shift_to_bottom_left:
@@ -154,14 +148,14 @@ class Model:
                     y_coord_old = inner_iteration_value
                 val = self.grid[x_coord_old][y_coord_old]
                 # Check for case where blocks could merge
-                if val > self.empty_square_value and val == last_block_val:
+                if val > EMPTY_SQUARE_VALUE and val == last_block_val:
                     last_block_val = val + val
                     m = self._block_merge(last_block_val, x_coord_old, y_coord_old, last_open,
                                           directional_adjustment, shift_horizontal, shift_to_bottom_left)
                     self.last_move.set(m)
                     no_merged = False
                 # Check for case where block could slide and collide
-                elif val > self.empty_square_value:
+                elif val > EMPTY_SQUARE_VALUE:
                     m = self._block_collide(val, x_coord_old, y_coord_old, last_open,
                                             shift_horizontal, shift_to_bottom_left)
                     last_block_val = val
@@ -186,7 +180,7 @@ class Model:
             x_coord_new = x_coord_old
             y_coord_new = last_open + directional_adjustment
         self.grid[x_coord_new][y_coord_new] = new_val
-        self.grid[x_coord_old][y_coord_old] = self.empty_square_value
+        self.grid[x_coord_old][y_coord_old] = EMPTY_SQUARE_VALUE
         self.unoccupied_squares.append((x_coord_old, y_coord_old))
         old_coords = (x_coord_old, y_coord_old)
         new_coords = (x_coord_new, y_coord_new)
@@ -222,11 +216,11 @@ class Model:
         for column in self.grid:
             column_maxes.append(max(column))
         board_max = max(column_maxes)
-        if board_max == self.game_goal:
-            return self.game_states["Win"]
+        if board_max == GAME_GOAL:
+            return GAME_STATES["Win"]
         if self.no_valid_moves():
-            return self.game_states["Loss"]
-        return self.game_states["Play"]
+            return GAME_STATES["Loss"]
+        return GAME_STATES["Play"]
 
     def no_valid_moves(self):
         """
