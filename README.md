@@ -1,5 +1,5 @@
 # Slide
-Creating a 2408 game in python
+Creating a 2048 game in python
 
 Feature Idea List:
 
@@ -8,3 +8,7 @@ Feature Idea List:
 - Saving current game on exiting
 
 - Score?
+
+Known Bugs:
+
+- There is a window where, if moves are made fast enough, the view crashes as it cannot find an expected text object
