@@ -1,7 +1,6 @@
 """View for Slide game"""
 # import slideexeceptions
 from tkinter import *
-from PIL import Image, ImageTk
 from math import log
 from GlobalConstants import *
 
@@ -26,17 +25,6 @@ class View(Frame):
         self.new_game_button = self.buttons.new_game_button
         self._board = Board(parent, size, span)
         self.pack()
-
-    def draw_block(self, x, y, val):
-        """
-          Purpose:
-            Adds a block to the board at the grid coordinates of x, y of value val
-          Arguments:
-            x (int): Grid coordinate on the x axis of the block on board
-            y (int): Grid coordinate on the y axis of the block on board
-            val (int): Value of the block being added
-        """
-        self._board.draw_block(x, y, val)
 
     def draw_new(self, coord, val):
         """
@@ -127,7 +115,7 @@ class Board(Canvas):
         self.span = span
         self.animating = False
         self.block_tags = {}
-        self.build_blocklist()
+        self.build_fill_list()
         self.build_board(size, span)
         self.pack()
 
@@ -142,24 +130,54 @@ class Board(Canvas):
         self.create_rectangle(BOARD_BORDER, BOARD_BORDER,
                               span - BOARD_BORDER, span - BOARD_BORDER,
                               fill="#AAA")
-        grid_sq = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), "#FFF")
-        self.grid_sq = ImageTk.PhotoImage(grid_sq)
-        for x in range(size):
-            for y in range(size):
-                ex = self.to_pix(x)
-                why = self.to_pix(y)
-                self.create_image(ex, why, image=self.grid_sq)
+        for i in range(size):
+            for j in range(size):
+                x = self.to_pix(i)
+                y = self.to_pix(j)
+                self.draw_block(x, y, "#FFF")
 
-    def build_blocklist(self):
+    def draw_block(self, x, y, fill, **kwargs):
         """
-            Takes the Colors global and builds a list of ImageTk objects to  use
-            when drawing blocks
+            Purpose:
+                Draws a block centered on (x, y) with color fill on the canvas
+            Arguments:
+                x (int) - coordinate on the x axis IN PIXELS
+                y (int) - coordinate on the y axis IN PIXELS
+                fill (3 or 6 digit hex value) - color of block to draw
+                kwargs:
+                    "tag" (string) - tag to give rectangle canvas object.
+                                     if not given, sets as ""
+                    "size" (int) - side length of block.
+                                   if not given, sets as BLOCK_SIZE
+            Returns:
+                none
         """
-        self.blocklist = []
+        try:
+            block_size = kwargs["size"]
+        except KeyError:
+            block_size = BLOCK_SIZE
+        # half = block_size / 2
+        upper_x = x
+        upper_y = y
+        # minus one bc tkinter rectangle lower right is defined as just outside the rectangle
+        lower_x = x + block_size - 1
+        lower_y = y + block_size - 1
+        try:
+            tag = kwargs["tag"]
+        except KeyError:
+            tag = ""
+        self.create_rectangle(upper_x, upper_y, lower_x, lower_y,
+                              fill=fill, width=0, tags=tag)
+
+    def build_fill_list(self):
+        """
+            Purpose:
+                Converts the COLORS constant to hex
+        """
+        self.fill_list = []
         for color in COLORS:
-            image = Image.new("RGB", (BLOCK_SIZE, BLOCK_SIZE), color)
-            block_image = ImageTk.PhotoImage(image)
-            self.blocklist.append(block_image)
+            hex_color = '#%02x%02x%02x' % color
+            self.fill_list.append(hex_color)
 
     def to_pix(self, val):
         """
@@ -169,45 +187,26 @@ class Board(Canvas):
           Arguments:
             Val - a number representing the "grid" coord to be translated
           Returns:
-            int - Pixel location of that coord on either axis
+            int - Pixel location of that coord (top right corner) on either axis
         """
-        return int(BOARD_BORDER + val * GRID_SQ_SIZE + (BLOCK_BORDER + GRID_SQ_SIZE) / 2)
+        return int(BOARD_BORDER + val * GRID_SQ_SIZE + (BLOCK_BORDER))
 
-    def draw_block(self, x, y, val):
-        """
-          Purpose:
-            Adds a block to the board at the grid coordinates of x, y of value val
-          Arguments:
-            x (int): Grid coordinate on the x axis of the block on board
-            y (int): Grid coordinate on the y axis of the block on board
-            val (int): Value of the block being added
-        """
-        coord = str(x) + "," + str(y)
-        coord_text = coord + "+"
-        block = self.find_withtag(coord)[0]
-        text = self.find_withtag(coord_text)[0]
-        x = self.to_pix(x)
-        y = self.to_pix(y)
-        color = self.get_block_image(val)
-        self.itemconfigure(block, image=color)
-        self.itemconfigure(text, text=str(val))
-
-    def get_block_image(self, val):
+    def get_block_fill(self, val):
         """
             Purpose:
-                Retrieves the block image for the given value
+                Retrieves the block fill color for the given value
             Arguments:
                 val (int) - value to retrieve color for
             Returns:
-                Image for block
+                fill hex color
         """
         if val:
             # the plus one is because I found this list of colors on the internet
             # and didn't organize them by colors, and the first one is a super jarring
             # bright pink
-            color = self.blocklist[int(log(val, BLOCK_BASE_VALUE) + 1)]
+            color = self.fill_list[int(log(val, BLOCK_BASE_VALUE) + 1)]
         else:
-            color = self.blocklist[0]
+            color = self.fill_list[0]
         return color
 
     def draw_moves(self, moves):
@@ -223,7 +222,7 @@ class Board(Canvas):
         self.animating = True
         moves_left = list(moves)
         for move in moves:
-            fin = self.animate(move)
+            fin = self.animate_move(move)
             if fin:
                 moves_left.remove(move)
         if moves_left == []:
@@ -232,7 +231,7 @@ class Board(Canvas):
         else:
             return self.after(ANIMATION_DELAY, self.draw_moves, moves_left)
 
-    def animate(self, move):
+    def animate_move(self, move):
         """
             Purpose:
                 animates a block move
@@ -249,38 +248,83 @@ class Board(Canvas):
         new_y = self.to_pix(new_y)
         old_coord_id = str(old_coord[0]) + "," + str(old_coord[1])
         new_coord_id = str(new_coord[0]) + "," + str(new_coord[1])
-        old_block = self.find_withtag(old_coord_id)[0]
-        old_text = self.find_withtag(old_coord_id + "+")[0]
+        moving_block = self.find_withtag(old_coord_id)[0]
+        moving_text = self.find_withtag(old_coord_id + "+")[0]
         if old_x > new_x or old_y > new_y:
-            shift = - ANIMATION_SLIDE_MOVEMENT_PER_FRAME
+            shift = - ANIMATION_SLIDE_ADJ
         else:
-            shift = ANIMATION_SLIDE_MOVEMENT_PER_FRAME
+            shift = ANIMATION_SLIDE_ADJ
         if old_x == new_x:
-            self.move(old_block, 0, shift)
-            self.move(old_text, 0, shift)
-            finalize = self.coords(old_block) == list((new_x, new_y))
+            self.move(moving_block, 0, shift)
+            self.move(moving_text, 0, shift)
+            block_coords = self.coords(moving_block)[0:2]
+            diff = abs(new_y - block_coords[1])
+            if diff < ANIMATION_SLIDE_ADJ:
+                self.move(moving_block, 0, diff)
+                self.move(moving_text, 0, diff)
+                self.finalize_move(moving_block, new_coord_id, moving_text)
+                return "fin"
         else:
-            self.move(old_block, shift, 0)
-            self.move(old_text, shift, 0)
-            finalize = self.coords(old_block) == list((new_x, new_y))
-        if finalize:
-            self.finalize_move(old_block, new_coord_id, old_text)
-            return "fin"
+            self.move(moving_block, shift, 0)
+            self.move(moving_text, shift, 0)
+            block_coords = self.coords(moving_block)[0:2]
+            diff = abs(new_x - block_coords[0])
+            if diff < ANIMATION_SLIDE_ADJ:
+                self.move(moving_block, diff, 0)
+                self.move(moving_text, diff, 0)
+                self.finalize_move(moving_block, new_coord_id, moving_text)
+                return "fin"
 
-    def finalize_move(self, old_block, new_coord_id, text_id):
+    def maybe_final_frame(self, diff, moving_block, new_coord_id, moving_text):
         """
-            Complete the last steps neccessary in a move animation
+            Purpose:
+                If the block is within a frame of reaching/passing the new coordinates,
+                move to final spot and return True
+            Arguments:
+                diff (int) - difference between current coordinate and destination coordinate
+                             on axis of movement
+                moving_block (string) - tag of block being moved in animation
+                new_coord_id (string) - tag that the block will be assigned at end of move
+                moving_text (string) - tag of the text being moved with the block
+            Returns:
+                True if the block was moved into the final position, otherwise false
         """
-        val = self.itemcget(text_id, "text")
+        print(curr_coords)
+        print(new_coords)
+        print(delta_x)
+        print(delta_y)
+        if diff < ANIMATION_SLIDE_ADJ:
+            # self.coords(moving_block, new_coords)
+            self.move(moving_block, diff, 0)
+            self.move(moving_text, diff, 0)
+            self.finalize_move(moving_block, new_coord_id, moving_text)
+        else:
+            return False
+        self.create_rectangle(new_coords[0], new_coords[1], new_coords[0] + 10, new_coords[1] + 10, fill="#000")
+        return True
+
+    def finalize_move(self, moving_block, new_coord_id, moving_text):
+        """
+            Purpose:
+                Cleans up objects & object tags used during animation
+            Arguments:
+                moving_block (string) - tag of block being moved in animation
+                new_coord_id (string) - tag that the block will be assigned at end of move
+                moving_text (string) - tag of the text being moved with the block
+            Returns:
+                None
+        """
+        val = self.itemcget(moving_text, "text")
         if self.find_withtag(new_coord_id):
             new_val = int(val) * BLOCK_BASE_VALUE
-            self.itemconfigure(text_id, text=str(new_val))
+            self.itemconfigure(moving_text, text=str(new_val))
             self.delete(new_coord_id)
             self.delete(new_coord_id + "+")
         else:
             new_val = int(val)
-        self.itemconfigure(old_block, tag=new_coord_id, image=self.get_block_image(new_val))
-        self.itemconfigure(text_id, tag=new_coord_id + "+")
+        self.itemconfigure(moving_block, tag=new_coord_id, fill=self.get_block_fill(new_val))
+        self.itemconfigure(moving_text, tag=new_coord_id + "+")
+        self.tag_raise(moving_text, moving_block)
 
     def draw_new(self, coord, val):
         """
@@ -298,32 +342,32 @@ class Board(Canvas):
             text_id = block_id + "+"
             x = self.to_pix(x)
             y = self.to_pix(y)
-            image = Image.new("RGB", (0, 0), COLORS[val])
-            block_image = ImageTk.PhotoImage(image)
-            self.create_image(x, y, image=block_image, tag=block_id)
-            self.create_text(x, y, text=str(val), tag=text_id)
-            self.animate_new(block_id, [], 0, val)
+            fill = self.get_block_fill(val)
+            self.draw_block(x, y, fill, tag=block_id, size=0)
+            self.animate_new(x, y, fill, block_id, text_id, val, 0)
 
-    def animate_new(self, block_id, holdref, size, val):
+    def animate_new(self, x, y, fill, block_id, text_id, val, size):
         """
             Purpose:
                 animates the addition of a new block to the board
             Arguments:
-                block_id (int) - Id of block to animate as new block
-                holdref (list) - list of ImageTkPhotoImages. Because Tk doesn't handle
-                    images properly this guy needs to hold a reference to them during the animation
-                    so they don't get garabage collected
+                x (int) - x coord of block
+                y (int) - y coord of block
+                fill (hex value) - color of fill
+                block_id (string) - tag of block to animate as new block
+                text_id (string) - tag of text to animate with new block
+                val (int) - value of block
                 size (int) - current size of the animated block
         """
         if size < BLOCK_SIZE:
-            image = Image.new("RGB", (size, size), COLORS[val])
-            block_image = ImageTk.PhotoImage(image)
-            holdref.append(block_image)
-            self.itemconfigure(block_id, image=block_image)
-            self.after(ANIMATION_DELAY, self.animate_new, block_id,
-                       holdref, size + ANIMATION_GROWTH, val)
+            self.delete(block_id)
+            self.draw_block(x, y, fill, tag=block_id, size=size)
+            self.after(ANIMATION_DELAY, self.animate_new, x, y, fill,
+                       block_id, text_id, val, size + ANIMATION_GROWTH_ADJ)
         else:
-            self.itemconfigure(block_id, image=self.get_block_image(val))
+            self.delete(block_id)
+            self.draw_block(x, y, fill, tag=block_id, size=BLOCK_SIZE)
+            self.create_text(x + (BLOCK_SIZE / 2), y + (BLOCK_SIZE / 2), text=str(val), tag=text_id)
 
     def wipe_board(self):
         """
