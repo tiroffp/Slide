@@ -80,6 +80,17 @@ class View(Frame):
         """
         self._board.game_end(game_state)
 
+    def draw_from_value(self, x, y, value):
+        """
+            Purpose:
+                Draws a block at the coordinates (x, y) colored based on the value
+            Arguments:
+                x (int) - x coordinate of the block (in grid number)
+                y (int) - y coordinate of the block (in grid number)
+                value (int) - value of the block
+        """
+        self._board.draw_from_value(x, y, self._board.get_block_fill(value))
+
 
 class Buttons(Frame):
 
@@ -134,16 +145,16 @@ class Board(Canvas):
             for j in range(size):
                 x = self.to_pix(i)
                 y = self.to_pix(j)
-                self.draw_block(x, y, "#FFF")
+                self.draw_block(x, y, EMPTY_SQUARE_VALUE)
 
-    def draw_block(self, x, y, fill, **kwargs):
+    def draw_block(self, x, y, val, **kwargs):
         """
             Purpose:
-                Draws a block centered on (x, y) with color fill on the canvas
+                Draws a block centered on (x, y) with color val on the canvas
             Arguments:
                 x (int) - coordinate on the x axis IN PIXELS
                 y (int) - coordinate on the y axis IN PIXELS
-                fill (3 or 6 digit hex value) - color of block to draw
+                val (3 or 6 digit hex value) - color of block to draw
                 kwargs:
                     "tag" (string) - tag to give rectangle canvas object.
                                      if not given, sets as ""
@@ -156,7 +167,7 @@ class Board(Canvas):
             block_size = kwargs["size"]
         except KeyError:
             block_size = BLOCK_SIZE
-        # half = block_size / 2
+        fill = self.get_block_fill(val)
         upper_x = x
         upper_y = y
         # minus one bc tkinter rectangle lower right is defined as just outside the rectangle
@@ -168,6 +179,12 @@ class Board(Canvas):
             tag = ""
         self.create_rectangle(upper_x, upper_y, lower_x, lower_y,
                               fill=fill, width=0, tags=tag)
+        if tag:
+            text_id = tag + "+"
+            prev = self.find_withtag(text_id)
+            if prev:
+                self.delete(text_id)
+            self.create_text(x + (BLOCK_SIZE / 2), y + (BLOCK_SIZE / 2), text=str(val), tag=text_id)
 
     def build_fill_list(self):
         """
@@ -200,7 +217,7 @@ class Board(Canvas):
             Returns:
                 fill hex color
         """
-        if val:
+        if val > EMPTY_SQUARE_VALUE:
             # the plus one is because I found this list of colors on the internet
             # and didn't organize them by colors, and the first one is a super jarring
             # bright pink
@@ -317,18 +334,16 @@ class Board(Canvas):
             text_id = block_id + "+"
             x = self.to_pix(x)
             y = self.to_pix(y)
-            fill = self.get_block_fill(val)
-            self.draw_block(x, y, fill, tag=block_id, size=0)
-            self.animate_new(x, y, fill, block_id, text_id, val, 0)
+            self.draw_block(x, y, val, tag=block_id, size=0)
+            self.animate_new(x, y, block_id, text_id, val, 0)
 
-    def animate_new(self, x, y, fill, block_id, text_id, val, size):
+    def animate_new(self, x, y, block_id, text_id, val, size):
         """
             Purpose:
                 animates the addition of a new block to the board
             Arguments:
                 x (int) - x coord of block
                 y (int) - y coord of block
-                fill (hex value) - color of fill
                 block_id (string) - tag of block to animate as new block
                 text_id (string) - tag of text to animate with new block
                 val (int) - value of block
@@ -336,14 +351,13 @@ class Board(Canvas):
         """
         if size < BLOCK_SIZE:
             self.delete(block_id)
-            self.draw_block(x, y, fill, tag=block_id, size=size)
-            self.after(ANIMATION_DELAY, self.animate_new, x, y, fill,
-                       block_id, text_id, val, size + ANIMATION_GROWTH_ADJ)
+            self.draw_block(x, y, val, tag=block_id, size=size)
+            self.after(ANIMATION_DELAY, self.animate_new, x, y, block_id, text_id,
+                       val, size + ANIMATION_GROWTH_ADJ)
         else:
             self.delete(block_id)
-            self.draw_block(x, y, fill, tag=block_id, size=BLOCK_SIZE)
-            self.create_text(x + (BLOCK_SIZE / 2), y + (BLOCK_SIZE / 2), text=str(val), tag=text_id)
-            print(text_id)
+            self.draw_block(x, y, val, tag=block_id, size=BLOCK_SIZE)
+            # self.create_text(x + (BLOCK_SIZE / 2), y + (BLOCK_SIZE / 2), text=str(val), tag=text_id)
 
     def wipe_board(self):
         """
