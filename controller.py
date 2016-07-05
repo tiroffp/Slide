@@ -50,7 +50,10 @@ class Controller():
         if self.view.is_animating():
             return
         no_sliding = self.valid_moves[key]()
-        self.do_moves()
+        try:
+            self.do_moves()
+        except IndexError:
+            self.view.redraw_from_model()
         game_check = self.model.game_state_check()
         if game_check:
             self.view.game_end(game_check)
@@ -59,6 +62,7 @@ class Controller():
             coords = self.model.add_new_block()
             val = self.model.value_at(coords[0], coords[1])
             self.view.draw_new(coords, val)
+        print(self.model.grid)
 
     def new_game(self):
         """
@@ -85,6 +89,17 @@ class Controller():
         fin = self.view.draw_moves(self.moves)
         if fin:
             self.moves = []
+
+    def redraw_from_model(self):
+        """
+            Has the view redraw the board based on the values in the model.
+            Used if
+        """
+        self.view.reset()
+        for x in range(self.size):
+            for y in range(self.size):
+                val = self.model.value_at(x, y)
+                self.view.draw_from_value(x, y, val)
 
     def backdoor(self):
         for x in range(self.size):
