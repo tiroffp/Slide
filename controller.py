@@ -62,7 +62,6 @@ class Controller():
             coords = self.model.add_new_block()
             val = self.model.value_at(coords[0], coords[1])
             self.view.draw_new(coords, val)
-        print(self.model.grid)
 
     def new_game(self):
         """
