@@ -9,6 +9,3 @@ Feature Idea List:
 
 - Score?
 
-Known Bugs:
-
-- There is a window where, if moves are made fast enough, the view crashes as it cannot find an expected text object
